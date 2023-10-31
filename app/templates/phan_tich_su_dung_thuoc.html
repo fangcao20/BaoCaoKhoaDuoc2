@@ -1,0 +1,1009 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row w-100">
+  <div class="col-2">
+    <!-- Tab navs -->
+    <div
+      class="nav flex-column nav-tabs"
+      id="v-tabs-tab"
+      role="tablist"
+      aria-orientation="vertical"
+    >
+      <a
+        class="nav-link active"
+        id="tab-0"
+        data-mdb-toggle="tab"
+        href="#tab-content-0"
+        role="tab"
+        aria-controls="content-0"
+        aria-selected="true"
+        >0. Nhập dữ liệu</a
+      >
+      <a
+        class="nav-link"
+        id="tab-1"
+        data-mdb-toggle="tab"
+        href="#tab-content-1"
+        role="tab"
+        aria-controls="content-1"
+        aria-selected="false"
+        >1. Phân tích ABC</a
+      >
+      <a
+        class="nav-link"
+        id="tab-2"
+        data-mdb-toggle="tab"
+        href="#tab-content-2"
+        role="tab"
+        aria-controls="content-2"
+        aria-selected="false"
+        >2. ABC theo thuốc nội và ngoại</a
+      >
+      <a
+        class="nav-link"
+        id="tab-3"
+        data-mdb-toggle="tab"
+        href="#tab-content-3"
+        role="tab"
+        aria-controls="content-3"
+        aria-selected="false"
+        >3. ABC theo nhóm dược lý</a
+      >
+      <a
+        class="nav-link"
+        id="tab-8"
+        data-mdb-toggle="tab"
+        href="#tab-content-8"
+        role="tab"
+        aria-controls="content-8"
+        aria-selected="false"
+        >4. ABC theo nhóm hoá dược</a
+      >
+      <a
+        class="nav-link"
+        id="tab-7"
+        data-mdb-toggle="tab"
+        href="#tab-content-7"
+        role="tab"
+        aria-controls="content-7"
+        aria-selected="false"
+        >4. ABC theo nhóm thầu</a
+      >
+      <a
+        class="nav-link"
+        id="tab-4"
+        data-mdb-toggle="tab"
+        href="#tab-content-4"
+        role="tab"
+        aria-controls="content-4"
+        aria-selected="false"
+        >5. Phân tích VEN</a
+      >
+      <a
+        class="nav-link"
+        id="tab-5"
+        data-mdb-toggle="tab"
+        href="#tab-content-5"
+        role="tab"
+        aria-controls="content-5"
+        aria-selected="false"
+        >6. ABC giữa 2 khoảng thời gian</a
+      >
+      <a
+        class="nav-link"
+        id="tab-6"
+        data-mdb-toggle="tab"
+        href="#tab-content-6"
+        role="tab"
+        aria-controls="content-6"
+        aria-selected="false"
+        style="display: none"
+        >7. Chỉ số hiệu quả</a
+      >
+    </div>
+    <!-- Tab navs -->
+  </div>
+
+  <div class="col-10">
+    <!-- Tab content -->
+    <div class="tab-content" id="v-tabs-tabContent">
+      <div
+        class="tab-pane fade show active"
+        id="tab-content-0"
+        role="tabpanel"
+        aria-labelledby="tab-0"
+      >
+       <div class="accordion accordion-borderless" id="nhapDuLieu">
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="duLieuCoSan">
+              <button class="accordion-button" type="button" data-mdb-toggle="collapse"
+                data-mdb-target="#duLieuCoSanCollapse" aria-expanded="true" aria-controls="duLieuCoSanCollapse">
+                <strong>#1 Dữ liệu có sẵn</strong>
+              </button>
+            </h2>
+            <div id="duLieuCoSanCollapse" class="accordion-collapse collapse show"
+              aria-labelledby="duLieuCoSan" data-mdb-parent="#nhapDuLieu">
+              <div class="accordion-body">
+                  <div class="accordion accordion-flush" id="ndlDuLieuCoSan">
+                      <div class="accordion-item">
+                        <h2 class="accordion-header" id="dlcs1time">
+                          <button
+                            class="accordion-button collapsed"
+                            type="button"
+                            data-mdb-toggle="collapse"
+                            data-mdb-target="#dlcs1timeCollapse"
+                            aria-expanded="false"
+                            aria-controls="dlcs1timeCollapse"
+                          >
+                            #Trong 1 khoảng thời gian
+                          </button>
+                        </h2>
+                        <div
+                          id="dlcs1timeCollapse"
+                          class="accordion-collapse collapse"
+                          aria-labelledby="dlcs1time"
+                          data-mdb-parent="#ndlDuLieuCoSan"
+                        >
+                          <div class="accordion-body">
+                            <p>Từ <input type="date" id="a1tfrom"> Đến <input type="date" id="a1tto"></p>
+                              <button type="button" class="btn btn-sm btn-success mt-2" style="width: 100px" onclick="available_1_time()">Cập nhật</button>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="accordion-item">
+                        <h2 class="accordion-header" id="dlcs2time">
+                          <button
+                            class="accordion-button collapsed"
+                            type="button"
+                            data-mdb-toggle="collapse"
+                            data-mdb-target="#dlcs2timeCollapse"
+                            aria-expanded="false"
+                            aria-controls="dlcs2timeCollapse"
+                          >
+                            #Trong 2 khoảng thời gian
+                          </button>
+                        </h2>
+                        <div
+                          id="dlcs2timeCollapse"
+                          class="accordion-collapse collapse"
+                          aria-labelledby="dlcs2time"
+                          data-mdb-parent="#ndlDuLieuCoSan"
+                        >
+                          <div class="accordion-body">
+                            <div class="row">
+                                <div class="col">
+                                    <h6>Khoảng thời gian 1:</h6>
+                                    <p>Từ <input type="date" id="a2tfrom1"> Đến <input type="date" id="a2tto1"></p>
+                                </div>
+                                <div class="col">
+                                    <h6>Khoảng thời gian 2:</h6>
+                                   <p> Từ <input type="date" id="a2tfrom2"> Đến <input type="date" id="a2tto2"></p>
+                                </div>
+                            </div>
+                              <button type="button" class="btn btn-sm btn-success mt-4" style="width: 100px" onclick="available_2_time()">Cập nhật</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+              </div>
+            </div>
+          </div>
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="import">
+              <button class="accordion-button collapsed" type="button" data-mdb-toggle="collapse"
+                data-mdb-target="#importCollapse" aria-expanded="false" aria-controls="importCollapse">
+                <strong>#2 Import</strong>
+              </button>
+            </h2>
+            <div id="importCollapse" class="accordion-collapse collapse" aria-labelledby="import"
+              data-mdb-parent="#nhapDuLieu">
+              <div class="accordion-body">
+                  <div class="accordion accordion-flush" id="ndlImport">
+                      <div class="accordion-item">
+                        <h2 class="accordion-header" id="import1time">
+                          <button
+                            class="accordion-button collapsed"
+                            type="button"
+                            data-mdb-toggle="collapse"
+                            data-mdb-target="#import1timeCollapse"
+                            aria-expanded="false"
+                            aria-controls="import1timeCollapse"
+                          >
+                            #Trong 1 khoảng thời gian
+                          </button>
+                        </h2>
+                        <div
+                          id="import1timeCollapse"
+                          class="accordion-collapse collapse"
+                          aria-labelledby="import1time"
+                          data-mdb-parent="#ndlImport"
+                        >
+                          <div class="accordion-body">
+                              <h6>Chọn file:</h6>
+                              <input type="file" id="fileABCVEN" hidden accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel">
+                              <input id="fileABCVEN_name" type="text" style="width: 300px; margin-right: 20px" disabled>
+                              <button class="btn btn-secondary btn-sm" onclick="select_file()">Chọn file</button><br>
+                              <button type="button" class="btn btn-sm btn-success mt-3" style="width: 100px" onclick="import_1_time()">Cập nhật</button>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="accordion-item">
+                        <h2 class="accordion-header" id="import2time">
+                          <button
+                            class="accordion-button collapsed"
+                            type="button"
+                            data-mdb-toggle="collapse"
+                            data-mdb-target="#import2timeCollapse"
+                            aria-expanded="false"
+                            aria-controls="import2timeCollapse"
+                          >
+                            #Trong 2 khoảng thời gian
+                          </button>
+                        </h2>
+                        <div
+                          id="import2timeCollapse"
+                          class="accordion-collapse collapse"
+                          aria-labelledby="import2time"
+                          data-mdb-parent="#ndlImport"
+                        >
+                          <div class="accordion-body">
+                            <div class="row">
+                              <div class="col">
+                                  <h6>Chọn file 1:</h6>
+                                  <input type="file" id="fileABCVEN1" hidden>
+                                  <input type="text" id="fileABCVEN1_name" style="width: 300px; margin-right: 20px" disabled>
+                                  <button class="btn btn-secondary btn-sm" onclick="select_file1()">Chọn file</button>
+                                  <ul id="listingKhoChan"></ul>
+                              </div>
+                              <div class="col">
+                                  <h6>Chọn file 2:</h6>
+                                  <input type="file" id="fileABCVEN2" hidden>
+                                  <input type="text" id="fileABCVEN2_name"  style="width: 300px; margin-right: 20px" disabled>
+                                  <button class="btn btn-secondary btn-sm" onclick="select_file2()">Chọn file</button>
+                                  <ul id="listingKhoLe"></ul>
+                              </div>
+                            </div>
+                              <button type="button" class="btn btn-sm btn-success" style="width: 100px" onclick="import_2_time()">Cập nhật</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+              </div>
+            </div>
+          </div>
+       </div>
+      </div>
+      <div
+        class="tab-pane fade"
+        id="tab-content-1"
+        role="tabpanel"
+        aria-labelledby="tab-1"
+      >
+        <div class="row">
+           <div class="col col-xxl-6">
+               <h6>Phân tích A/ABC-VEN</h6>
+               <table class="table align-middle mb-0 bg-white table-sm table-bordered">
+                   <thead class="bg-light">
+                        <tr class="text-center">
+                            <th>Nhóm</th>
+                            <th>Số lượng</th>
+                            <th>Tỷ lệ</th>
+                            <th>Giá trị</th>
+                            <th>Tỷ lệ</th>
+                        </tr>
+                   </thead>
+                   <tbody id="a/abc-ven"></tbody>
+               </table>
+               <div style="width: 100%; height: 400px">
+                   <canvas id="canvas_abc"></canvas>
+               </div>
+           </div>
+           <div class="col col-xxl-6">
+               <h6>Phân tích</h6>
+               <p>Nhóm A có <span class="special" id="a/abc-ven1"></span> thuốc, trong đó:</p>
+               <ul>
+                   <li>
+                       <p><span class="special" id="an"></span> thuốc là không thiết yếu chiếm tỷ lệ cao (AN) cần giảm
+                       hay loại bỏ và phân tích lý do sử dụng có lạm dụng thuốc hay thuốc có giá thành cao, gồm thuốc:</p>
+                       <div style="max-height: 200px; overflow: auto">
+                           <table class="table align-middle mb-0 bg-white table-sm table-bordered">
+                               <thead class="bg-light">
+                                    <tr class="text-center">
+                                        <th>Sản phẩm</th>
+                                        <th>Hoạt chất</th>
+                                        <th>VEN</th>
+                                        <th>ĐVT</th>
+                                        <th>Số lượng</th>
+                                        <th>Đơn giá</th>
+                                        <th>Thành tiền</th>
+                                    </tr>
+                               </thead>
+                               <tbody id="tableAN"></tbody>
+                           </table>
+                       </div>
+                   </li>
+                   <li>
+                       <p><span class="special" id="av"></span> thuốc AV là thuốc quan trọng chiếm tỷ lệ cao
+                       cần xem xét giảm chi phí tìm nhà cung ứng mới:</p>
+                       <div style="max-height: 200px; overflow: auto">
+                           <table class="table align-middle mb-0 bg-white table-sm table-bordered">
+                               <thead class="bg-light">
+                               <tr class="text-center">
+                                   <th>Sản phẩm</th>
+                                   <th>Hoạt chất</th>
+                                   <th>VEN</th>
+                                   <th>ĐVT</th>
+                                   <th>Số lượng</th>
+                                   <th>Đơn giá</th>
+                                   <th>Thành tiền</th>
+                               </tr>
+                               </thead>
+                               <tbody id="tableAV"></tbody>
+                           </table>
+                       </div>
+                   </li>
+                   <li>
+                       <p><span class="special" id="ae"></span> thuốc là biệt dược chiếm chi phí cao cần thay thế thuốc có giá
+                       thành thấp hơn để giảm gánh nặng chi phí nhằm kiểm soát chi phí thuốc và có kế
+                       hoạch mua sắm phù hợp:</p>
+                       <div style="max-height: 200px; overflow: auto">
+                           <table class="table align-middle mb-0 bg-white table-sm table-bordered">
+                               <thead class="bg-light">
+                               <tr class="text-center">
+                                   <th>Sản phẩm</th>
+                                   <th>Hoạt chất</th>
+                                   <th>VEN</th>
+                                   <th>ĐVT</th>
+                                   <th>Số lượng</th>
+                                   <th>Đơn giá</th>
+                                   <th>Thành tiền</th>
+                               </tr>
+                               </thead>
+                               <tbody id="tableAE"></tbody>
+                           </table>
+                       </div>
+                   </li>
+               </ul>
+           </div>
+       </div>
+       <hr>
+       <div class="row mt-3">
+           <div class="col col-xxl-6">
+               <h6>Phân tích N/ABC-VEN</h6>
+               <table class="table align-middle mb-0 bg-white table-sm table-bordered">
+                   <thead class="bg-light">
+                        <tr class="text-center">
+                            <th>Nhóm</th>
+                            <th>Số lượng</th>
+                            <th>Tỷ lệ</th>
+                            <th>Giá trị</th>
+                            <th>Tỷ lệ</th>
+                        </tr>
+                   </thead>
+                   <tbody id="n/abc-ven"></tbody>
+               </table>
+               <div style="width: 100%; height: 400px">
+                   <canvas id="canvas_nabc"></canvas>
+               </div>
+           </div>
+           <div class="col col-xxl-6">
+               <h6>Phân tích</h6>
+               <ul>
+                   <li>
+                       <p><span class="special" id="bn"></span> thuốc nhóm BN là thuốc có giá trị trung bình và không quan trọng:</p>
+                       <div style="max-height: 200px; overflow: auto">
+                           <table class="table align-middle mb-0 bg-white table-sm table-bordered">
+                           <thead class="bg-light">
+                                <tr class="text-center">
+                                    <th>Sản phẩm</th>
+                                    <th>Hoạt chất</th>
+                                    <th>VEN</th>
+                                    <th>ĐVT</th>
+                                    <th>Số lượng</th>
+                                    <th>Đơn giá</th>
+                                    <th>Thành tiền</th>
+                                </tr>
+                           </thead>
+                           <tbody id="tableBN"></tbody>
+                       </table>
+                       </div>
+                   </li>
+                   <li>
+                       <p><span class="special" id="cn"></span> thuốc nhóm CN tương ứng nhóm III là nhóm thuốc có giá trị
+                           thấp và không quan trọng:</p>
+                       <div style="max-height: 200px; overflow: auto">
+                           <table class="table align-middle mb-0 bg-white table-sm table-bordered">
+                               <thead class="bg-light">
+                               <tr class="text-center">
+                                   <th>Sản phẩm</th>
+                                   <th>Hoạt chất</th>
+                                   <th>VEN</th>
+                                   <th>ĐVT</th>
+                                   <th>Số lượng</th>
+                                   <th>Đơn giá</th>
+                                   <th>Thành tiền</th>
+                               </tr>
+                               </thead>
+                               <tbody id="tableCN"></tbody>
+                           </table>
+                       </div>
+                   </li>
+               </ul>
+           </div>
+       </div>
+       <hr>
+       <div class="row mt-3">
+           <div class="col col-xxl-6">
+               <h6>Phân tích Ma trận ABC-VEN</h6>
+               <table class="table align-middle mb-0 bg-white table-sm table-bordered">
+                   <thead class="bg-light">
+                        <tr class="text-center">
+                            <th>Nhóm</th>
+                            <th>Số lượng</th>
+                            <th>Tỷ lệ</th>
+                            <th>Giá trị</th>
+                            <th>Tỷ lệ</th>
+                        </tr>
+                   </thead>
+                   <tbody id="mt/abc-ven"></tbody>
+               </table>
+               <div style="width: 100%; height: 400px">
+                   <canvas id="canvas_abcven"></canvas>
+               </div>
+           </div>
+           <div class="col col-xxl-6">
+               <h6>Phân tích</h6>
+               <ul>
+                   <li>
+                       <p>Nhóm I có tỷ lệ về số lượng thuốc <span class="special" id="slI"></span> và tỷ lệ về giá
+                       <span class="special" id="gtI"></span></p>
+                       <p>Đây là nhóm thuốc quan trọng nhất cần ưu tiên để giữ ổn định chi phí và phải luôn sẵn có.</p>
+                   </li>
+                   <li>
+                       <p>Nhóm II có tỷ lệ về số lượng thuốc <span class="special" id="slII"></span> và tỷ lệ về giá
+                       <span class="special" id="gtII"></span></p>
+                       <p>Đây là nhóm thuốc quan trọng có giá trị trung bình.</p>
+                   </li>
+                   <li>
+                       <p>Nhóm III có tỷ lệ về số lượng thuốc <span class="special" id="slIII"></span> và tỷ lệ về giá
+                       <span class="special" id="gtIII"></span></p>
+                       <p>Đây là nhóm thuốc ít quan trọng có giá trị thấp.</p>
+                   </li>
+               </ul>
+               <h6>→ Tỷ lệ hợp lý của nhóm thuốc tối cần (nhóm I) và thuốc thiết yếu (nhóm II) chiếm tỷ lệ cao
+                   <span class="special" id="gtI/II"></span></h6>
+           </div>
+       </div>
+      </div>
+      <div
+        class="tab-pane fade"
+        id="tab-content-2"
+        role="tabpanel"
+        aria-labelledby="tab-2"
+      >
+        <div class="row">
+           <div class="col col-xxl-8">
+               <h6>Phân tích tỷ lệ sử dụng thuốc nội thuốc ngoại theo số lượng</h6>
+               <table class="table align-middle mb-0 bg-white table-sm table-bordered">
+                   <thead class="bg-light">
+                        <tr class="text-center">
+                            <th></th>
+                            <th colspan="2">Thuốc nội</th>
+                            <th colspan="2">Thuốc ngoại</th>
+                            <th colspan="2">Tổng</th>
+                        </tr>
+                        <tr class="text-center">
+                            <th>Nhóm</th>
+                            <th>Số lượng</th>
+                            <th>Tỷ lệ</th>
+                            <th>Số lượng</th>
+                            <th>Tỷ lệ</th>
+                            <th>Số lượng</th>
+                            <th>Tỷ lệ</th>
+                        </tr>
+                   </thead>
+                   <tbody id="slnoingoai"></tbody>
+               </table>
+               <div style="width: 100%; height: 400px">
+                   <canvas id="canvas_noingoaisl"></canvas>
+               </div>
+           </div>
+           <div class="col col-xxl-4">
+               <h6>Phân tích</h6>
+               <ul>
+                   <li>
+                       <p>Tỷ lệ sử dụng thuốc nội về số lượng <span class="special soluong"></span>
+                           hơn thuốc ngoại là <span class="special soluong"></span></p>
+                   </li>
+                   <li>
+                       <p>Tỷ lệ sử dụng thuốc nội nhóm A về số lượng <span class="special soluong"></span>
+                           hơn thuốc ngoại là <span class="special soluong"></span></p>
+                   </li>
+               </ul>
+               <p>Hội đồng thuốc và điều trị có chủ trương ưu tiên sử dụng thuốc sản xuất trong nước và theo
+                   phân tích bên đề ra kế hoạch lộ trình tăng dần.</p>
+           </div>
+       </div>
+        <hr>
+       <div class="row">
+           <div class="col col-xxl-8">
+               <h6>Phân tích tỷ lệ sử dụng thuốc nội thuốc ngoại theo giá trị</h6>
+               <table class="table align-middle mb-0 bg-white table-sm table-bordered">
+                   <thead class="bg-light">
+                        <tr class="text-center">
+                            <th></th>
+                            <th colspan="2">Thuốc nội</th>
+                            <th colspan="2">Thuốc ngoại</th>
+                            <th colspan="2">Tổng</th>
+                        </tr>
+                        <tr class="text-center">
+                            <th>Nhóm</th>
+                            <th>Giá trị</th>
+                            <th>Tỷ lệ</th>
+                            <th>Giá trị</th>
+                            <th>Tỷ lệ</th>
+                            <th>Giá trị</th>
+                            <th>Tỷ lệ</th>
+                        </tr>
+                   </thead>
+                   <tbody id="gtnoingoai"></tbody>
+               </table>
+               <div style="width: 100%; height: 400px">
+                   <canvas id="canvas_noingoaigt"></canvas>
+               </div>
+           </div>
+           <div class="col col-xxl-4">
+               <h6>Phân tích</h6>
+               <ul>
+                   <li>
+                       <p>Tỷ lệ sử dụng thuốc nội về giá trị <span class="special giatri"></span>
+                           hơn thuốc ngoại là <span class="special giatri"></span></p>
+                   </li>
+                   <li>
+                       <p>Tỷ lệ sử dụng thuốc nội nhóm A về giá trị <span class="special giatri"></span>
+                           hơn thuốc ngoại là <span class="special giatri"></span></p>
+                   </li>
+               </ul>
+               <p>Hội đồng thuốc và điều trị có chủ trương ưu tiên sử dụng thuốc sản xuất trong nước và theo
+                   phân tích bên đề ra kế hoạch lộ trình tăng dần.</p>
+           </div>
+       </div>
+      </div>
+      <div
+        class="tab-pane fade"
+        id="tab-content-3"
+        role="tabpanel"
+        aria-labelledby="tab-3"
+      >
+        <div class="row">
+            <div>
+                <h6>Nhóm Dược lý</h6>
+                <div style="max-height: 400px; overflow: auto">
+                    <table class="table align-middle mb-0 bg-white table-sm table-bordered">
+                       <thead class="bg-light">
+                            <tr class="text-center">
+                                <th>STT</th>
+                                <th>Nhóm</th>
+                                <th>Số lượng</th>
+                                <th>Tỷ lệ</th>
+                                <th>Giá trị</th>
+                                <th>Tỷ lệ</th>
+                            </tr>
+                       </thead>
+                       <tbody id="top_ndl"></tbody>
+                   </table>
+                </div>
+               <div style="width: 100%; height: 500px" class="d-flex justify-content-center">
+                   <canvas id="canvas_tndl"></canvas>
+               </div>
+                <div class="row mt-3">
+                  <h6>Phân tích</h6>
+                </div>
+            </div>
+            <hr>
+            <div>
+                <h6>ABC theo từng Nhóm dược lý: </h6>
+                <select style="width: 100%" class="form-select select2" name="" id="selectNhomDuocLyABC"></select>
+                <table class="table align-middle mb-0 bg-white table-sm table-bordered mt-3">
+                   <thead class="bg-light">
+                        <tr class="text-center">
+                            <th>Nhóm</th>
+                            <th>Số lượng</th>
+                            <th>Tỷ lệ</th>
+                            <th>Giá trị</th>
+                            <th>Tỷ lệ</th>
+                        </tr>
+                   </thead>
+                   <tbody id="abc_ndl"></tbody>
+               </table>
+               <div style="width: 100%; height: 400px" class="d-flex justify-content-center">
+                   <canvas id="canvas_ndl"></canvas>
+               </div>
+                <div class="row mt-3">
+                  <h6>Phân tích</h6>
+                </div>
+            </div>
+        </div>
+      </div>
+      <div
+        class="tab-pane fade"
+        id="tab-content-8"
+        role="tabpanel"
+        aria-labelledby="tab-8"
+      >
+        <div class="row">
+            <div>
+                <h6>Nhóm Hoá dược</h6>
+                <div style="max-height: 400px; overflow: auto">
+                    <table class="table align-middle mb-0 bg-white table-sm table-bordered">
+                       <thead class="bg-light">
+                            <tr class="text-center">
+                                <th>STT</th>
+                                <th>Nhóm</th>
+                                <th>Số lượng</th>
+                                <th>Tỷ lệ</th>
+                                <th>Giá trị</th>
+                                <th>Tỷ lệ</th>
+                            </tr>
+                       </thead>
+                       <tbody id="top_nhd"></tbody>
+                   </table>
+                </div>
+               <div style="width: 100%; height: 500px" class="d-flex justify-content-center">
+                   <canvas id="canvas_tnhd"></canvas>
+               </div>
+                <div class="row mt-3">
+                  <h6>Phân tích</h6>
+                </div>
+            </div>
+            <hr>
+            <div>
+                <h6>ABC theo từng Nhóm Hoá dược:</h6>
+               <select style="width: 100%" class="form-select select2" name="" id="selectNhomHoaDuocABC"></select>
+                <table class="table align-middle mb-0 bg-white table-sm table-bordered mt-3">
+                   <thead class="bg-light">
+                        <tr class="text-center">
+                            <th>Nhóm</th>
+                            <th>Số lượng</th>
+                            <th>Tỷ lệ</th>
+                            <th>Giá trị</th>
+                            <th>Tỷ lệ</th>
+                        </tr>
+                   </thead>
+                   <tbody id="abc_nhd"></tbody>
+               </table>
+               <div style="width: 100%; height: 400px" class="d-flex justify-content-center">
+                   <canvas id="canvas_nhd"></canvas>
+               </div>
+                <div class="row mt-3">
+                  <h6>Phân tích</h6>
+                </div>
+            </div>
+        </div>
+      </div>
+      <div
+        class="tab-pane fade"
+        id="tab-content-7"
+        role="tabpanel"
+        aria-labelledby="tab-7"
+      >
+          <div class="row">
+              <div class="col col-xxl-8">
+                  <h6>Phân tích tỷ lệ dùng thuốc biệt dược gốc và generic theo số lượng</h6>
+                  <table class="table align-middle mb-0 bg-white table-sm table-bordered mt-3">
+                   <thead class="bg-light">
+                        <tr class="text-center">
+                            <th></th>
+                            <th colspan="2">Biệt dược gốc</th>
+                            <th colspan="2">Generic</th>
+                            <th colspan="2">Tổng</th>
+                        </tr>
+                        <tr class="text-center">
+                            <th>Nhóm</th>
+                            <th>Số lượng</th>
+                            <th>Tỷ lệ</th>
+                            <th>Số lượng</th>
+                            <th>Tỷ lệ</th>
+                            <th>Số lượng</th>
+                            <th>Tỷ lệ</th>
+                        </tr>
+                   </thead>
+                   <tbody id="abc_bdg_sl"></tbody>
+               </table>
+                  <div style="width: 100%; height: 400px">
+                   <canvas id="canvas_bdgsl"></canvas>
+               </div>
+              </div>
+              <div class="col col-xxl-4">
+                  <h6>Phân tích</h6>
+              </div>
+          </div>
+          <hr>
+          <div class="row">
+              <div class="col col-xxl-8">
+                  <h6>Phân tích tỷ lệ dùng thuốc biệt dược gốc và generic theo giá trị</h6>
+                  <table class="table align-middle mb-0 bg-white table-sm table-bordered mt-3">
+                   <thead class="bg-light">
+                        <tr class="text-center">
+                            <th></th>
+                            <th colspan="2">Biệt dược gốc</th>
+                            <th colspan="2">Generic</th>
+                            <th colspan="2">Tổng</th>
+                        </tr>
+                        <tr class="text-center">
+                            <th>Nhóm</th>
+                            <th>Giá trị</th>
+                            <th>Tỷ lệ</th>
+                            <th>Giá trị</th>
+                            <th>Tỷ lệ</th>
+                            <th>Giá trị</th>
+                            <th>Tỷ lệ</th>
+                        </tr>
+                   </thead>
+                   <tbody id="abc_bdg_gt"></tbody>
+               </table>
+                  <div style="width: 100%; height: 400px">
+                   <canvas id="canvas_bdggt"></canvas>
+               </div>
+              </div>
+              <div class="col col-xxl-4">
+                  <h6>Phân tích</h6>
+              </div>
+          </div>
+          <hr>
+          <div class="row" style="overflow: auto;">
+              <h6>Phân tích tỷ lệ dùng thuốc theo nhóm thầu theo số lượng</h6>
+              <table class="table align-middle mb-0 bg-white table-sm table-bordered">
+                   <thead class="bg-light">
+                        <tr class="text-center">
+                            <th></th>
+                            <th colspan="2">Nhóm 1</th>
+                            <th colspan="2">Nhóm 2</th>
+                            <th colspan="2">Nhóm 3</th>
+                            <th colspan="2">Nhóm 4</th>
+                            <th colspan="2">Nhóm 5</th>
+                            <th colspan="2">Tổng</th>
+                        </tr>
+                        <tr class="text-center">
+                            <th>Nhóm</th>
+                            <th>Số lượng</th>
+                            <th>Tỷ lệ</th>
+                            <th>Số lượng</th>
+                            <th>Tỷ lệ</th>
+                            <th>Số lượng</th>
+                            <th>Tỷ lệ</th>
+                            <th>Số lượng</th>
+                            <th>Tỷ lệ</th>
+                            <th>Số lượng</th>
+                            <th>Tỷ lệ</th>
+                            <th>Số lượng</th>
+                            <th>Tỷ lệ</th>
+                        </tr>
+                   </thead>
+                   <tbody id="abc_nt_sl"></tbody>
+              </table>
+                  <div style="width: 100%; height: 400px">
+                   <canvas id="canvas_nhomthausl"></canvas>
+               </div>
+          </div>
+          <div class="row mt-3">
+              <h6>Phân tích</h6>
+          </div>
+          <hr>
+          <div class="row" style="overflow: auto;">
+              <h6>Phân tích tỷ lệ dùng thuốc theo nhóm thầu theo giá trị</h6>
+              <table class="table align-middle mb-0 bg-white table-sm table-bordered">
+                   <thead class="bg-light">
+                        <tr class="text-center">
+                            <th></th>
+                            <th colspan="2">Nhóm 1</th>
+                            <th colspan="2">Nhóm 2</th>
+                            <th colspan="2">Nhóm 3</th>
+                            <th colspan="2">Nhóm 4</th>
+                            <th colspan="2">Nhóm 5</th>
+                            <th colspan="2">Tổng</th>
+                        </tr>
+                        <tr class="text-center">
+                            <th>Nhóm</th>
+                            <th>Giá trị</th>
+                            <th>Tỷ lệ</th>
+                            <th>Giá trị</th>
+                            <th>Tỷ lệ</th>
+                            <th>Giá trị</th>
+                            <th>Tỷ lệ</th>
+                            <th>Giá trị</th>
+                            <th>Tỷ lệ</th>
+                            <th>Giá trị</th>
+                            <th>Tỷ lệ</th>
+                            <th>Giá trị</th>
+                            <th>Tỷ lệ</th>
+                        </tr>
+                   </thead>
+                   <tbody id="abc_nt_gt"></tbody>
+              </table>
+              <div style="width: 100%; height: 400px">
+                   <canvas id="canvas_nhomthaugt"></canvas>
+               </div>
+          </div>
+          <div class="row mt-3">
+              <h6>Phân tích</h6>
+          </div>
+      </div>
+      <div
+        class="tab-pane fade"
+        id="tab-content-4"
+        role="tabpanel"
+        aria-labelledby="tab-4"
+      >
+        <div class="row">
+           <div class="col col-xxl-6">
+               <h6>Phân tích VEN</h6>
+               <table class="table align-middle mb-0 bg-white table-sm table-bordered">
+                   <thead class="bg-light">
+                        <tr class="text-center">
+                            <th>Nhóm</th>
+                            <th>Số lượng</th>
+                            <th>Tỷ lệ</th>
+                            <th>Giá trị</th>
+                            <th>Tỷ lệ</th>
+                        </tr>
+                   </thead>
+                   <tbody id="ven"></tbody>
+               </table>
+               <div style="width: 100%; height: 400px">
+                   <canvas id="canvas_ven"></canvas>
+               </div>
+           </div>
+           <div class="col col-xxl-6">
+               <h6>Phân tích</h6>
+               <ul>
+                   <li>
+                       <p>Nhóm <span class="special ven"></span> chiếm tỷ lệ cao nhất là <span class="special ven"></span></p>
+                   </li>
+                   <li>
+                        <p>Nhóm <span class="special ven"></span> chiếm tỷ lệ thấp nhất là <span class="special ven"></span></p>
+                   </li>
+               </ul>
+               <p>→ Xác định thuốc ưu tiên mua và dự trữ tại BV.</p>
+           </div>
+       </div>
+      </div>
+      <div
+        class="tab-pane fade"
+        id="tab-content-5"
+        role="tabpanel"
+        aria-labelledby="tab-5"
+      >
+        <div class="row" id="time"></div>
+        <div class="row">
+            <div class="col col-xxl-6">
+               <h6>Phân tích ABC theo số lượng</h6>
+               <table class="table align-middle mb-0 bg-white table-sm table-bordered">
+                   <thead class="bg-light">
+                        <tr class="text-center">
+                            <th></th>
+                            <th colspan="2">T1</th>
+                            <th colspan="2">T2</th>
+                        </tr>
+                        <tr class="text-center">
+                            <th>Nhóm</th>
+                            <th>Số lượng</th>
+                            <th>Tỷ lệ</th>
+                            <th>Số lượng</th>
+                            <th>Tỷ lệ</th>
+                        </tr>
+                   </thead>
+                   <tbody id="abc_2_sl"></tbody>
+               </table>
+                <div style="width: 100%; height: 400px">
+                   <canvas id="canvas_abc2sl"></canvas>
+               </div>
+            </div>
+            <div class="col col-xxl-6">
+                <h6>Phân tích</h6>
+            </div>
+        </div>
+          <hr>
+        <div class="row">
+            <div class="col col-xxl-6">
+               <h6>Phân tích ABC theo giá trị</h6>
+               <table class="table align-middle mb-0 bg-white table-sm table-bordered">
+                   <thead class="bg-light">
+                        <tr class="text-center">
+                            <th></th>
+                            <th colspan="2">T1</th>
+                            <th colspan="2">T2</th>
+                        </tr>
+                        <tr class="text-center">
+                            <th>Nhóm</th>
+                            <th>Giá trị</th>
+                            <th>Tỷ lệ</th>
+                            <th>Giá trị</th>
+                            <th>Tỷ lệ</th>
+                        </tr>
+                   </thead>
+                   <tbody id="abc_2_gt"></tbody>
+               </table>
+                <div style="width: 100%; height: 400px">
+                   <canvas id="canvas_abc2gt"></canvas>
+               </div>
+            </div>
+            <div class="col col-xxl-6">
+                <h6>Phân tích</h6>
+            </div>
+        </div>
+          <hr>
+        <div class="row">
+            <div class="col col-xxl-6">
+               <h6>Phân tích Ma trận ABC-VEN theo số lượng</h6>
+               <table class="table align-middle mb-0 bg-white table-sm table-bordered">
+                   <thead class="bg-light">
+                        <tr class="text-center">
+                            <th></th>
+                            <th colspan="2">T1</th>
+                            <th colspan="2">T2</th>
+                        </tr>
+                        <tr class="text-center">
+                            <th>Nhóm</th>
+                            <th>Số lượng</th>
+                            <th>Tỷ lệ</th>
+                            <th>Số lượng</th>
+                            <th>Tỷ lệ</th>
+                        </tr>
+                   </thead>
+                   <tbody id="matran_2_sl"></tbody>
+               </table>
+                <div style="width: 100%; height: 400px">
+                   <canvas id="canvas_mt2sl"></canvas>
+               </div>
+            </div>
+            <div class="col col-xxl-6">
+                <h6>Phân tích</h6>
+            </div>
+        </div>
+          <hr>
+        <div class="row">
+            <div class="col col-xxl-6">
+               <h6>Phân tích Ma trận ABC-VEN theo giá trị</h6>
+               <table class="table align-middle mb-0 bg-white table-sm table-bordered">
+                   <thead class="bg-light">
+                        <tr class="text-center">
+                            <th></th>
+                            <th colspan="2">T1</th>
+                            <th colspan="2">T2</th>
+                        </tr>
+                        <tr class="text-center">
+                            <th>Nhóm</th>
+                            <th>Giá trị</th>
+                            <th>Tỷ lệ</th>
+                            <th>Giá trị</th>
+                            <th>Tỷ lệ</th>
+                        </tr>
+                   </thead>
+                   <tbody id="matran_2_gt"></tbody>
+               </table>
+                <div style="width: 100%; height: 400px">
+                   <canvas id="canvas_mt2gt"></canvas>
+               </div>
+            </div>
+            <div class="col col-xxl-6">
+                <h6>Phân tích</h6>
+            </div>
+        </div>
+          <hr>
+      </div>
+      <div
+        class="tab-pane fade"
+        id="tab-content-6"
+        role="tabpanel"
+        aria-labelledby="tab-6"
+      >
+        Content for tab 6. Chỉ số hiệu quả
+      </div>
+    </div>
+    <!-- Tab content -->
+  </div>
+</div>
+<script src="/static/abcven.js"></script>
+{% endblock %}

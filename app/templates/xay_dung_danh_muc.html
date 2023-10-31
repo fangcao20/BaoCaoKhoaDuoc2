@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block content %}
+<table class="table table-borderless align-middle">
+    <tr>
+        <td style="width: 120px"><h6>Hoạt chất:</h6></td>
+        <td>
+            <select style="width: 100%" class="form-select select2" name="selectHoatChatXDDM" id="selectHoatChatXDDM"></select>
+        </td>
+    </tr>
+</table>
+<div style="margin-left: 20px; margin-right: 20px">
+    <div style="height: 500px;" class="ag-theme-alpine" id="gridXayDungDanhMuc"></div>
+</div>
+<div class="container">
+    <div class="row mt-5">
+        <div class="row">
+            <table class="table table-bordered">
+                <thead>
+                <tr>
+                    <th style="width: 150px"></th>
+                    <th class="text-center">Số lượng</th>
+                    <th class="text-center">%</th>
+                    <th class="text-center">Tổng tiền</th>
+                    <th class="text-center">%</th>
+                    <th class="completed text-center">Số lượng</th>
+                    <th class="completed text-center">%</th>
+                    <th class="completed text-center">Tổng tiền</th>
+                    <th class="completed text-center">%</th>
+                </tr>
+                </thead>
+                <tbody id="tableBDG"></tbody>
+            </table>
+        </div>
+        <div class="row mt-3">
+            <table class="table table-bordered">
+                <thead>
+                <tr>
+                    <th style="width: 150px"></th>
+                    <th class="text-center">Số lượng</th>
+                    <th class="text-center">%</th>
+                    <th class="text-center">Tổng tiền</th>
+                    <th class="text-center">%</th>
+                    <th class="completed text-center">Số lượng</th>
+                    <th class="completed text-center">%</th>
+                    <th class="completed text-center">Tổng tiền</th>
+                    <th class="completed text-center">%</th>
+                </tr>
+                </thead>
+                <tbody id="tableGeneric"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script src="/static/xay_dung_danh_muc.js"></script>
+{% endblock %}

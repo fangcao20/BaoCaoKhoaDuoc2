@@ -1,0 +1,124 @@
+.content {
+    margin: 80px 40px;
+}
+
+td {
+    min-width: 100px;
+}
+
+thead {
+    position: sticky;
+    top: 0px;
+}
+
+#nhapDotThau > form > table > tbody > tr > th {
+    width: 180px;
+}
+
+#nhapDotThau > form > table > tbody > tr > td {
+    padding-right: 10px;
+}
+
+#nhapKetQuaTrungThau > div:nth-child(1) > table > tbody > tr > td:nth-child(1) {
+    width: 160px;
+}
+
+#nhapKetQuaTrungThau > div:nth-child(1) > table > tbody > tr > td:nth-child(2) {
+    padding-right: 10px;
+}
+
+.danhMuc {
+    max-height: 450px;
+    overflow: auto;
+}
+
+.specialCol {
+    background-color: #f8f3e8 !important;
+    font-weight: bold;
+}
+
+th, td {
+  cursor: pointer;
+}
+
+.ag-cell {
+    border: 1px solid #F1EFEF;
+}
+
+.20-phan-tram1 {
+    background: #F9F5F6;
+}
+
+.mstt1 {
+    background: #F8F6F4;
+}
+
+.cdt1 {
+    background: #F7FFE5;
+}
+
+.20-phan-tram2 {
+    background: #F8E8EE;
+}
+
+.mstt2 {
+    background: #E3F4F4;
+}
+
+.cdt2 {
+    background: #E1ECC8;
+}
+
+.20-phan-tram3 {
+    background: #FDCEDF;
+}
+
+.mstt3 {
+    background: #D2E9E9;
+}
+
+.cdt3 {
+    background: #C4D7B2;
+}
+
+.completed {
+    background: #F7FFE5 !important;
+}
+
+.special {
+    color: red;
+    font-weight: bold;
+}
+
+#top_nhd tr td.text-center {
+    text-align: left !important;
+}
+
+#top_ndl tr td.text-center {
+    text-align: left !important;
+}
+
+.input-search {
+  background-image: url('/static/searchicon.png');
+  background-position: 10px 12px;
+  background-repeat: no-repeat;
+  width: 100%; /* Full-width */
+  padding: 12px 20px 12px 40px; /* Add some padding */
+  border: 1px solid #ddd; /* Add a grey border */
+  margin-bottom: 12px; /* Add some space below the input */
+}
+
+.header {
+    width: 10%;
+}
+
+.select-col {
+    width: 40%;
+}
+
+.select2 {
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

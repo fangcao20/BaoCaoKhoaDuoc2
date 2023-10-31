@@ -1,0 +1,178 @@
+<!doctype html>
+<html>
+    <head>
+      <title>Báo cáo Khoa Dược</title>
+      <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"/>
+<!-- Google Fonts -->
+      <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet"/>
+      <link href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.4.2/mdb.min.css" rel="stylesheet"/>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.4.2/mdb.min.js"></script>
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/ag-grid-enterprise@30.1.0/dist/ag-grid-enterprise.min.js"></script>
+      <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+      <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+      <link rel="stylesheet" type="text/css" href="/static/styles.css">
+      <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+      <script>
+        $(document).ready(function() {
+            $('.select2').select2({
+              placeholder: 'Chọn',
+              allowClear: true,
+              width: '100%'
+            });
+        });
+        function selectRowTable(rows, func) {
+          Array.from(rows).forEach(function(row) {
+          row.addEventListener('click', function() {
+              if (!this.classList.contains('table-primary')) {
+                  var selectedRow = document.querySelector('tr.table-primary');
+                  if (selectedRow) {
+                      selectedRow.classList.remove('table-primary');
+                  }
+                  this.classList.add('table-primary');
+                  func(row);
+              } else {
+                  this.classList.remove('table-primary');
+              }
+          });
+         });
+        }
+
+        function formatDate(datetime) {
+            var date = new Date(datetime);
+            var year = date.getFullYear();
+            var month = String(date.getMonth() + 1).padStart(2, '0');
+            var day = String(date.getDate()).padStart(2, '0');
+
+            var formattedDateStr = `${year}-${month}-${day}`;
+
+            return formattedDateStr;
+        }
+
+
+        function numberFormatter(params) {
+            var num = params.value;
+            if (num) {
+                return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            }
+        }
+
+        function getLocale() {
+          return {
+              filterOoo: 'Lọc...',
+              equals: '=',
+              notEqual: '!=',
+              blank: 'Trống',
+              notBlank: 'Không trống',
+              empty: 'Rỗng',
+
+              // Number Filter
+              lessThan: '<',
+              greaterThan: '>',
+              lessThanOrEqual: '≤',
+              greaterThanOrEqual: '≥',
+              inRange: 'Trong khoảng',
+              inRangeStart: 'Từ',
+              inRangeEnd: 'Tới',
+          }
+      }
+
+      function percentageFormat(params) {
+          var num = params.value;
+          if (num) {
+              return `${num}%`;
+          }
+      }
+      </script>
+    </head>
+    <body>
+      <!-- Navbar -->
+      {% if user.is_authenticated %}
+      <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <!-- Container wrapper -->
+        <div class="container-fluid">
+          <!-- Toggle button -->
+          <button
+            class="navbar-toggler"
+            type="button"
+            data-mdb-toggle="collapse"
+            data-mdb-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+          >
+            <i class="fas fa-bars"></i>
+          </button>
+
+          <!-- Collapsible wrapper -->
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <!-- Left links -->
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+              {% set accesses = user.get_accesses().all() %}
+              {% for a in accesses %}
+              <li class="nav-item">
+                  <a class="nav-link" href="{{ url_for(a.url, url=user.hospital.url) }}">{{ a.name }}</a>
+              </li>
+              {% endfor %}
+            </ul>
+            <!-- Left links -->
+          </div>
+          <!-- Collapsible wrapper -->
+
+          <!-- Right elements -->
+          <div class="d-flex align-items-center">
+            <!-- Avatar -->
+            <div class="dropdown">
+              <a
+                class="dropdown-toggle d-flex align-items-center hidden-arrow"
+                href="#"
+                id="navbarDropdownMenuAvatar"
+                role="button"
+                data-mdb-toggle="dropdown"
+                aria-expanded="false"
+              >
+                <button type="button" class="btn shadow-0 p-0 me-3"><i class="fas fa-bars"></i></button>
+              </a>
+              <ul
+                class="dropdown-menu dropdown-menu-end"
+                aria-labelledby="navbarDropdownMenuAvatar"
+              >
+                <li>
+                  <h6 class="dropdown-item" style="margin: 0"><b>{{ user.hospital.name.upper() }}</b></h6>
+                </li>
+                <li>
+                  <p class="dropdown-item" style="margin: 0"><b>{% if user.role == 'A'%} Admin
+                  {% elif user.role == 'E' %} Nhân viên {% endif %}</b> <i>&lt;{{ user.username }}&gt;</i></p>
+                </li>
+                {% if user.role == "A" %}
+                <li>
+                  <a class="dropdown-item" href="{{ url_for('set_accesses', url=user.hospital.url) }}">Phân quyền</a>
+                </li>
+                {% endif %}
+                <li>
+                  <a class="dropdown-item" href="#">Hướng dẫn</a>
+                </li>
+                <li>
+                  <a class="dropdown-item" href="{{ url_for('change_password', username=user.username) }}">Đổi mật khẩu</a>
+                </li>
+                <li>
+                  <a class="dropdown-item" href="{{ url_for('logout') }}">Đăng xuất</a>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <!-- Right elements -->
+        </div>
+        <!-- Container wrapper -->
+      </nav>
+      {% endif %}
+      <!-- Navbar -->
+      {% include "alert.html" %}
+      <div class="mt-3">
+        {% block content %}
+        <div class="d-flex justify-content-center mt-5"><h6 style="font-weight: bold; font-size: 40px">Báo cáo Khoa Dược</h6></div>
+        {% endblock %}
+      </div>
+    </body>
+</html>

@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block contents %}
+    <div class="container">
+        <h1>Có lỗi xảy ra.</h1>
+        <p>Quản trị viên đã được thông báo. Xin lỗi vì sự bất tiện!</p>
+        <p><a href="{{ url_for('index') }}">Quay lại</a></p>
+    </div>
+{% endblock %}

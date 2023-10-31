@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row w-100">
+  <div class="col-2">
+    <!-- Tab navs -->
+    <div
+      class="nav flex-column nav-tabs"
+      id="v-tabs-tab"
+      role="tablist"
+      aria-orientation="vertical"
+    >
+      <a
+        class="nav-link active"
+        id="v-tabs-home-tab"
+        data-mdb-toggle="tab"
+        href="#v-tabs-home"
+        role="tab"
+        aria-controls="v-tabs-home"
+        aria-selected="true"
+        >Đợt thầu</a
+      >
+      <a
+        class="nav-link"
+        id="v-tabs-profile-tab"
+        data-mdb-toggle="tab"
+        href="#v-tabs-profile"
+        role="tab"
+        aria-controls="v-tabs-profile"
+        aria-selected="false"
+        onclick="getDotThau()"
+        >Kết quả trúng thầu</a
+      >
+      <a
+        class="nav-link"
+        id="v-tabs-messages-tab"
+        data-mdb-toggle="tab"
+        href="#v-tabs-messages"
+        role="tab"
+        aria-controls="v-tabs-messages"
+        aria-selected="false"
+        onclick="baoCaoTongHop()"
+        >Báo cáo tổng hợp KQTT</a
+      >
+    </div>
+    <!-- Tab navs -->
+  </div>
+
+  <div class="col-10">
+    <!-- Tab content -->
+    <div class="tab-content" id="v-tabs-tabContent">
+      <div
+        class="tab-pane fade show active"
+        id="v-tabs-home"
+        role="tabpanel"
+        aria-labelledby="v-tabs-home-tab"
+      >
+        <form action="" method="post">
+          {{ form.hidden_tag() }}
+          <table class="table table-borderless table-sm">
+            <tr>
+              <th>{{ form.code.label }}</th>
+              <td>{{ form.code(class="form-control") }}</td>
+              <th>{{ form.name.label }}</th>
+              <td>{{ form.name(class="form-control") }}</td>
+            </tr>
+            <tr>
+              <th>{{ form.phase.label }}</th>
+              <td>{{ form.phase(class="form-control") }}</td>
+              <th>{{ form.formality.label }}</th>
+              <td>{{ form.formality(class="form-select") }}</td>
+            </tr>
+            <tr>
+              <th>{{ form.soQD.label }}</th>
+              <td>{{ form.soQD(class="form-control") }}</td>
+              <th>{{ form.ngayQD.label }}</th>
+              <td>{{ form.ngayQD(class="form-control") }}</td>
+            </tr>
+            <tr>
+              <th>{{ form.ngayHH.label }}</th>
+              <td>{{ form.ngayHH(class="form-control") }}</td>
+              <th>{{ form.note.label }}</th>
+              <td>{{ form.note(class="form-control") }}</td>
+            </tr>
+          </table>
+          {{ form.id(style="display: none") }}
+          <div class="mb-3">
+            <button type="reset" class="btn btn-secondary btn-sm" style="width: 100px">Xoá trắng</button>
+            {{ form.submit(class="btn btn-primary btn-sm",  style="width: 100px") }}
+            {{ form.update(class="btn btn-success btn-sm",  style="width: 100px") }}
+            {{ form.delete(class="btn btn-danger btn-sm",  style="width: 100px") }}
+          </div>
+        </form>
+        <div style="max-height: 450px; overflow: auto">
+          <table class="table align-middle mb-0 bg-white table-sm table-hover  table-bordered">
+            <thead class="bg-light">
+              <tr>
+                  <th>STT</th>
+                  <th>Mã đợt thầu</th>
+                  <th>Tên đợt thầu</th>
+                  <th>Giai đoạn</th>
+                  <th>Hình thức đấu thầu</th>
+                  <th>Số QĐ</th>
+                  <th>Ngày QĐ</th>
+                  <th>Ngày hết hạn</th>
+                  <th>Ghi chú</th>
+                  <th style="display: none">ID</th>
+              </tr>
+            </thead>
+            <tbody id="table_dot_thau">
+              {% for dt in dot_thau %}
+                <tr>
+                  <th>{{ loop.index }}</th>
+                  <td>{{ dt.code }}</td>
+                  <td>{{ dt.name }}</td>
+                  <td>{{ dt.phase }}</td>
+                  <td>{{ dt.formality }}</td>
+                  <td>{{ dt.soQD }}</td>
+                  <td>{{ dt.ngayQD }}</td>
+                  <td>{{ dt.ngayHH }}</td>
+                  <td>{{ dt.note }}</td>
+                  <td style="display: none">{{ dt.id }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div
+        class="tab-pane fade"
+        id="v-tabs-profile"
+        role="tabpanel"
+        aria-labelledby="v-tabs-profile-tab"
+      >
+        <div class="row">
+          <h6>Thông tin chung</h6>
+          <table class="table table-borderless table-sm" id="tableNhapThongTinChung">
+              <tr>
+                  <td>Mã đợt thầu</td>
+                  <td><select style="width: 100%" class="form-select select2" id="slMaDotThau" onchange="change_code(this)"></select></td>
+                  <td>Đợt thầu</td>
+                  <td><input type="text" id="slDotThau" class="form-control" disabled readonly></td>
+                  <td>Giai đoạn</td>
+                  <td><input type="text" id="slGiaiDoan" class="form-control" disabled readonly></td>
+                  <td>Hình thức đấu thầu</td>
+                  <td><input type="text" id="slHinhThucDauThau" class="form-control" disabled readonly></td>
+              </tr>
+              <tr>
+                  <td>Số QĐ</td>
+                  <td><input type="text" id="slSoQD" class="form-control" disabled readonly></td>
+                  <td>Ngày QĐ</td>
+                  <td><input type="text" id="slNgayQD" class="form-control" disabled readonly></td>
+                  <td>Ngày hết hạn</td>
+                  <td><input type="text" id="slNgayHetHan" class="form-control" disabled readonly></td>
+                  <td>Ghi chú</td>
+                  <td><input type="text" id="slGhiChu" class="form-control" disabled readonly></td>
+              </tr>
+          </table>
+      </div>
+      <div class="row mt-3">
+          <h6>Chi tiết thuốc</h6>
+          <div style="max-height: 500px; overflow: auto">
+              <table class="table align-middle mb-0 bg-white table-sm table-hover  table-bordered">
+                  <thead class="bg-light">
+                      <tr>
+                          <th>STT</th>
+                          <th style="min-width: 150px">Mã thuốc BV</th>
+                          <th style="min-width: 150px">Tên thuốc</th>
+                          <th style="min-width: 150px">Hoạt chất</th>
+                          <th style="min-width: 100px">Hàm lượng</th>
+                          <th style="min-width: 100px">SĐK</th>
+                          <th style="min-width: 120px">Đường dùng</th>
+                          <th style="min-width: 150px">Dạng bào chế</th>
+                          <th style="min-width: 200px">Quy cách đóng gói</th>
+                          <th style="min-width: 150px">Đơn vị tính</th>
+                          <th style="min-width: 200px">Cơ sở sản xuất</th>
+                          <th style="min-width: 150px">Nước sản xuất</th>
+                          <th style="min-width: 200px">Nhà thầu trúng thầu</th>
+                          <th style="min-width: 100px">Nhóm thầu</th>
+                          <th style="min-width: 100px">Số lượng</th>
+                          <th style="min-width: 100px">Đơn giá</th>
+                          <th style="min-width: 100px">Thành tiền</th>
+                      </tr>
+                  </thead>
+                  <tbody id="tableChiTietThuoc">
+                  </tbody>
+              </table>
+          </div>
+          <div class="mt-2">
+              <button id="importButton" class="btn btn-sm btn-primary mt-2" style="width: 200px" onclick="openDialog()">Import dữ liệu</button>
+              <button class="btn btn-success btn-sm mt-2" style="width: 100px" onclick="luuChiTietThuoc()">Lưu</button>
+              <input id='inputFile' accept=".xlsx, .xls" type='file' name='filename' onchange="readFile()" hidden/>
+          </div>
+          <div class="mt-2 text-black-50">
+              <p><i>*Tải file mẫu <strong><a href="#">Kết Quả Trúng Thầu</a></strong></i></p>
+          </div>
+          <div class="row mt-3">
+            <h6>Lịch sử Import dữ liệu</h6>
+            <div style="max-height: 300px; overflow: auto">
+                <table class="table align-middle mb-0 bg-white table-sm">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>STT</th>
+                            <th>Mã đợt thầu</th>
+                            <th>Thời gian</th>
+                            <th></th>
+                            <th style="display: none">ID</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableLichSu">
+                        {% for i in import_history %}
+                        <tr>
+                            <th>{{ loop.index }}</th>
+                            <td>{{ i.dot_thau.code }}</td>
+                            <td>{{ i.time }}</td>
+                            <td>
+                                <button type="button" class="btn btn-link btn-sm btn-rounded text-danger" onclick="xoaDuLieuImport({{ i.id }})">Xoá</button>
+                            </td>
+                            <td style="display: none">{{ i.id }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+      </div>
+      </div>
+      <div
+        class="tab-pane fade"
+        id="v-tabs-messages"
+        role="tabpanel"
+        aria-labelledby="v-tabs-messages-tab"
+      >
+        <div style="height: 600px;" class="ag-theme-alpine" id="exampleGrid"></div>
+      </div>
+    </div>
+    <!-- Tab content -->
+  </div>
+<script src="/static/ket_qua_trung_thau.js"></script>
+{% endblock %}
