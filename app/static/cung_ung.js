@@ -1,3 +1,71 @@
+var ctxThuoc = document.getElementById('canvas_thuoc');
+var chartThuoc = new Chart(ctxThuoc, {
+    type: 'line',
+    data: {
+        labels: [],
+        datasets: []
+    },
+});
+
+var ctxNT = document.getElementById('canvas_nhomthau');
+var chartNT = new Chart(ctxNT, {
+    type: 'bar',
+    data: {
+        labels: [],
+        datasets: []
+    },
+    options: {
+        responsive: true,
+        scales: {
+          x: {
+            stacked: true,
+          },
+          y: {
+            stacked: true
+          }
+        }
+    }
+})
+
+var ctxNDL = document.getElementById('canvas_nhomduocly');
+var chartNDL = new Chart(ctxNDL, {
+    type: 'bar',
+    data: {
+        labels: [],
+        datasets: []
+    },
+    options: {
+        responsive: true,
+        scales: {
+          x: {
+            stacked: true,
+          },
+          y: {
+            stacked: true
+          }
+        }
+    }
+})
+
+var ctxNHD = document.getElementById('canvas_nhomhoaduoc');
+var chartNHD = new Chart(ctxNHD, {
+    type: 'bar',
+    data: {
+        labels: [],
+        datasets: []
+    },
+    options: {
+        responsive: true,
+        scales: {
+          x: {
+            stacked: true,
+          },
+          y: {
+            stacked: true
+          }
+        }
+    }
+})
 $.get('/ket-qua-cung-ung'
 ).done(function (response) {
     var ketQuaCungUng = response.ketQuaCungUng;
@@ -9,12 +77,17 @@ $.get('/ket-qua-cung-ung'
     console.log('Lỗi: Không thể kết nối với máy chủ.');
 })
 
-function theodoicungung2() {
+function theodoicungung2(btn) {
+    btn.classList.remove('btn-success');
+    btn.classList.add('btn-secondary');
     $.get('/du-lieu-kho'
     ).done(function (response) {
         var ketQuaCungUng = response.ketQuaCungUng;
         if (ketQuaCungUng) {
             hienThiKetQuaCungUng(ketQuaCungUng);
+            alert('Cập nhật thành công!');
+            btn.classList.add('btn-success');
+            btn.classList.remove('btn-secondary');
         }
     }).fail(function() {
         console.log('Lỗi: Không thể kết nối với máy chủ.');
@@ -29,7 +102,9 @@ function selectExcel() {
     });
 }
 
-function theodoicungung() {
+function theodoicungung(btn) {
+    btn.classList.remove('btn-success');
+    btn.classList.add('btn-secondary');
     var formData = new FormData();
     var file = $('#inputFile')[0].files[0];
     var month = $("#month").val();
@@ -50,19 +125,22 @@ function theodoicungung() {
             var thuoc_not_available = response.thuoc_not_available;
             if (thuoc_not_available) {
                if (thuoc_not_available.length > 0) {
-                   var alert = document.getElementById('alert_warning');
-                   alert.style.display = 'block';
+                   var alertT = document.getElementById('alert_warning');
+                   alertT.style.display = 'block';
                    var html = `<h6>Có ${thuoc_not_available.length} thuốc chưa có trong danh sách trúng thầu: </h6>`;
                    for (const t of thuoc_not_available) {
                        html += `${t}<br>`;
                    }
-                   alert.innerHTML = html;
+                   alertT.innerHTML = html;
                }
             }
 
             var ketQuaCungUng = response.ketQuaCungUng;
             if (ketQuaCungUng) {
                 hienThiKetQuaCungUng(ketQuaCungUng);
+                alert('Cập nhật thành công!');
+                btn.classList.add('btn-success');
+                btn.classList.remove('btn-secondary');
             }
         },
         error: function() {
@@ -246,7 +324,6 @@ function updateSuDungTheoThang(ketQuaCungUng) {
     var columnDefs = getColumnDefsTheoThang();
     var newCols = [];
     var rowData = [];
-
     for (var thuoc of danhsachthuoc) {
         var rowThuoc = {
             'tenThuoc': thuoc[0],
@@ -291,6 +368,7 @@ function updateSuDungTheoThang(ketQuaCungUng) {
             });
         }
     }
+    console.log(highlightCell);
     var maxMonth = Math.max(...newCols);
 
     for (var i = 3; i <= maxMonth; i++) {
@@ -664,14 +742,6 @@ function hienThiKetQuaCungUng(ketQuaCungUng) {
     document.getElementById('tableTonLe').innerHTML = htmlTonLe;
     document.getElementById('tableTonLeLon').innerHTML = htmlTonLeLon;
 
-    var ctx = document.getElementById('canvas_thuoc');
-    var chart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: [],
-            datasets: []
-        },
-    });
     var thongkekho = ketQuaCungUng['thongkekho'];
     $('#selectThuocCungUng').on('change', function () {
         console.log('he');
@@ -709,10 +779,10 @@ function hienThiKetQuaCungUng(ketQuaCungUng) {
         var label_data = ['Ngày nhập kho chẵn', 'Tồn kho lẻ', 'Trung bình nhập chẵn', 'Dự trù còn lại'];
         var borderColor_data = ['#ff6384', '#36a2eb', '#ffcd56', '#4bc0c0'];
         var data_list = [ngay_nhap_kho_chan, ton_kho_le, trung_binh_nhap_chan, du_tru_con_lai];
-        chart.data.labels = labels;
-        chart.data.datasets = [];
+        chartThuoc.data.labels = labels;
+        chartThuoc.data.datasets = [];
         for (let i = 0, n = label_data.length; i < n; i++) {
-            chart.data.datasets.push(
+            chartThuoc.data.datasets.push(
                 {
                     label: label_data[i],
                     data: data_list[i],
@@ -721,30 +791,10 @@ function hienThiKetQuaCungUng(ketQuaCungUng) {
                 }
             )
         }
-        chart.update();
+        chartThuoc.update();
         document.getElementById('tableThuoc').innerHTML = html;
-        console.log(chart.data);
+        console.log(chartThuoc.data);
         console.log('herre');
-    })
-
-    var ctxNT = document.getElementById('canvas_nhomthau');
-    var chartNT = new Chart(ctxNT, {
-        type: 'bar',
-        data: {
-            labels: [],
-            datasets: []
-        },
-        options: {
-            responsive: true,
-            scales: {
-              x: {
-                stacked: true,
-              },
-              y: {
-                stacked: true
-              }
-            }
-        }
     })
     $('#selectHoatChatCungUng').on('change', function () {
         var hoatChat = this.value;
@@ -753,25 +803,6 @@ function hienThiKetQuaCungUng(ketQuaCungUng) {
         set_hl_dd_dbc(1, 10, hoatChat, danhsachthau);
     })
 
-    var ctxNDL = document.getElementById('canvas_nhomduocly');
-    var chartNDL = new Chart(ctxNDL, {
-        type: 'bar',
-        data: {
-            labels: [],
-            datasets: []
-        },
-        options: {
-            responsive: true,
-            scales: {
-              x: {
-                stacked: true,
-              },
-              y: {
-                stacked: true
-              }
-            }
-        }
-    })
     $('#selectNhomDuocLyCungUng').on('change', function () {
         var nhomDuocLy = this.value;
         ctxNDL.parentElement.style.display = 'block';
@@ -779,25 +810,6 @@ function hienThiKetQuaCungUng(ketQuaCungUng) {
         set_hl_dd_dbc(2, 11, nhomDuocLy, danhsachthau);
     })
 
-    var ctxNHD = document.getElementById('canvas_nhomhoaduoc');
-    var chartNHD = new Chart(ctxNHD, {
-        type: 'bar',
-        data: {
-            labels: [],
-            datasets: []
-        },
-        options: {
-            responsive: true,
-            scales: {
-              x: {
-                stacked: true,
-              },
-              y: {
-                stacked: true
-              }
-            }
-        }
-    })
     $('#selectNhomHoaDuocCungUng').on('change', function () {
         var nhomHoaDuoc = this.value;
         ctxNHD.parentElement.style.display = 'block';
@@ -888,4 +900,14 @@ function set_hl_dd_dbc(i, index, value, danhsachthau) {
     $(`#ham_luong${i}`)[0].innerHTML = htmlHL;
     $(`#duong_dung${i}`)[0].innerHTML = htmlDD;
     $(`#dang_bao_che${i}`)[0].innerHTML = htmlDBC;
+}
+
+function destroy_chart() {
+    var canvas = document.querySelectorAll('canvas');
+    for (const c of canvas) {
+        var chartStatus = Chart.getChart(c.id);
+        if (chartStatus != undefined) {
+            chartStatus.destroy();
+        }
+    }
 }

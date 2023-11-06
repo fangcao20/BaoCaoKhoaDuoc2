@@ -127,10 +127,9 @@ class Hospital(db.Model):
     def __repr__(self):
         return '<Hospital {}>'.format(self.name)
 
-    def __init__(self, name, url, email):
+    def __init__(self, name, url):
         self.name = name
         self.url = url
-        self.email = email
         db.session.add(self)
         db.session.commit()
         nhom_duoc_ly = NhomDuocLy.query.all()
@@ -624,7 +623,7 @@ class ThongKeKho(db.Model):
 class ImportHistoryNXT(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), index=True)
-    month = db.Column(db.String(64), index=True)
+    month = db.Column(db.Date)
     time = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     hospital_id = db.Column(db.Integer, db.ForeignKey('hospital.id', ondelete='CASCADE', onupdate='CASCADE'),
                             nullable=False)

@@ -22,11 +22,11 @@ function setSelectXDDM(xayDungDanhMuc) {
 
 const gridXayDungDanhMuc = {
   columnDefs: [
-        { headerName: 'STT', field: 'stt', filter: true, minWidth: 80 },
-        { headerName: 'Mã đợt thầu', field: 'maDotThau', filter: true },
-        { headerName: 'Tên thuốc', field: 'tenThuoc', filter: true },
-        { headerName: 'Hoạt chất', field: 'hoatChat', filter: true },
-        { headerName: 'Hàm lượng', field: 'hamLuong', filter: true },
+        { headerName: 'STT', field: 'stt', filter: true, minWidth: 80, maxWidth: 80, pinned: 'left' },
+        { headerName: 'Mã đợt thầu', field: 'maDotThau', filter: true, pinned: 'left'  },
+        { headerName: 'Tên thuốc', field: 'tenThuoc', filter: true, pinned: 'left'  },
+        { headerName: 'Hoạt chất', field: 'hoatChat', filter: true, pinned: 'left'  },
+        { headerName: 'Hàm lượng', field: 'hamLuong', filter: true, pinned: 'left'  },
         { headerName: 'SĐK', field: 'sDK', filter: true },
         { headerName: 'Đường dùng', field: 'duongDung', filter: true },
         { headerName: 'Dạng bào chế', field: 'dangBaoChe', filter: true },

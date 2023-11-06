@@ -560,9 +560,12 @@ def delete_import_history_nxt():
 @login_required
 def file_cung_ung():
     file = request.files.get('file')  # Lấy file được gửi lên
-    month = request.form.get('month')
+
     thuoc_not_available = []
     if file:
+        time = request.form.get('month')
+        year, month = time.split('-');
+        month = datetime(int(year), int(month), 1)
         db.session.query(FileInformation).filter(FileInformation.hospital_id == current_user.hospital.id).delete()
         if not ImportHistoryNXT.query.filter(ImportHistoryNXT.name == file.filename,
                                              ImportHistoryNXT.hospital_id == current_user.hospital.id).first():
@@ -621,7 +624,7 @@ def file_cung_ung():
         for r in nhap_chan:
             soLanNhap += 1
             nhap = r.nhap
-            ngayNhapChan = datetime.strptime(r.import_history.month, '%Y-%m')
+            ngayNhapChan = r.import_history.month
             tonLe = r.ton_bv
             sumNhapChan += nhap
             trungBinhNhapChan = int(round(sumNhapChan / soLanNhap, 0))
@@ -697,15 +700,17 @@ def ket_qua_cung_ung(data):
     if data == 'NXT':
         print(1)
         results = db.session.query(NXT.id, NXT.thuoc_id, func.sum(NXT.nhap), NXT.import_history_id).filter(
-            NXT.nhap > 0, NXT.hospital_id == current_user.hospital.id).group_by(
-            NXT.thuoc_id, NXT.import_history_id, NXT.id).order_by(NXT.thuoc_id).all()
+            NXT.nhap > 0, NXT.hospital_id == current_user.hospital.id).\
+            join(ImportHistoryNXT, ImportHistoryNXT.id == NXT.import_history_id).\
+            group_by(
+            NXT.thuoc_id, NXT.import_history_id, NXT.id).order_by(ImportHistoryNXT.month).all()
         for r in results:
             row = [r.import_history_id, r.thuoc_id]
             nxt = NXT.query.get(r.id)
             row.append(nxt.thuoc.name)
-            row.append(nxt.import_history.month)
+            row.append(nxt.import_history.month.strftime("%Y-%m-%d"))
             row.append(nxt.nhap)
-            month = datetime.strptime(nxt.import_history.month, '%Y-%m').date()
+            month = nxt.import_history.month
             kqtts = nxt.thuoc.ketquatrungthaus
             dotthaus = [kq.dot_thau for kq in kqtts]
             sorted_lst_dotthau = sorted(dotthaus, key=lambda DotThau: DotThau.ngayQD, reverse=True)
@@ -715,6 +720,7 @@ def ket_qua_cung_ung(data):
                     break
             suDungTheoThang.append(row)
         ketQuaCungUng['suDungTheoThang'] = suDungTheoThang
+        print(suDungTheoThang)
     elif data == 'KHO':
         print(2)
         results = db.session.query(KhoChan.thuoc_id,
@@ -727,7 +733,7 @@ def ket_qua_cung_ung(data):
                                    KhoChan.file_id
                                    ).filter(KhoChan.nhap > 0, KhoChan.hospital_id == current_user.hospital.id
                                             ).group_by('year_month', KhoChan.file_id, KhoChan.thuoc_id
-                                                       ).order_by(KhoChan.thuoc_id).all()
+                                                       ).order_by(func.max(KhoChan.time)).all()
         for r in results:
             row = [r.file_id, r.thuoc_id, Thuoc.query.filter_by(id=r.thuoc_id).first().name, r.year_month, r.nhap]
             month = datetime.strptime(r.year_month, '%Y-%m').date()

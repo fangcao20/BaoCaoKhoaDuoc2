@@ -50,6 +50,7 @@ function available_2_time() {
 
 function import_1_time() {
     destroy_chart();
+    $('.loading')[0].innerHTML = '<img src="/static/loading.gif" alt="">';
     var formData = new FormData();
     var file = $('#fileABCVEN')[0].files[0];
     formData.append('file', file);
@@ -60,6 +61,8 @@ function import_1_time() {
         processData: false,
         contentType: false,
         success: function(response) {
+            $('.loading')[0].innerHTML = '';
+            alert('Cập nhật thành công!');
             console.log(response);
             var ketQuaABCVEN = response.ketQuaABCVEN;
             if (ketQuaABCVEN) {
@@ -68,12 +71,14 @@ function import_1_time() {
         },
         error: function() {
            console.log('Lỗi: Không thể kết nối với máy chủ.');
+           alert('Có lỗi, vui lòng thực hiện lại!');
         }
     });
 }
 
 function import_2_time() {
     destroy_chart();
+    $('.loading')[1].innerHTML = '<img src="/static/loading.gif" alt="">';
     var formData = new FormData();
     var file1 = $('#fileABCVEN1')[0].files[0];
     var file2 = $('#fileABCVEN2')[0].files[0];
@@ -90,6 +95,8 @@ function import_2_time() {
         contentType: false,
         success: function(response) {
             console.log(response);
+            $('.loading')[1].innerHTML = '';
+            alert('Cập nhật thành công!');
             var ketQuaABCVEN = response.ketQuaABCVEN;
             if (ketQuaABCVEN) {
                 hienThiABCVEN(ketQuaABCVEN);
@@ -97,6 +104,7 @@ function import_2_time() {
         },
         error: function() {
            console.log('Lỗi: Không thể kết nối với máy chủ.');
+           alert('Có lỗi, vui lòng thực hiện lại!');
         }
     });
 }
