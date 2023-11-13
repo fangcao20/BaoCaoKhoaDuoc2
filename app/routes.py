@@ -4,7 +4,7 @@ from urllib.parse import urlsplit
 import pandas as pd
 from flask import render_template, flash, redirect, url_for, request, jsonify, get_flashed_messages
 from flask_login import current_user, login_user, logout_user, login_required
-from sqlalchemy import func, distinct, String, text, case, desc
+from sqlalchemy import func, case, desc
 
 from app import app, db
 from app.email import send_password_reset_email
@@ -209,7 +209,7 @@ def nhap_ket_qua_trung_thau(url):
                            dot_thau=dot_thau, import_history=import_history)
 
 
-@app.route('/nhap-ket-qua-trung-thau-1', methods=['POST'])
+@app.route('/nhap-ket-qua-trung-thau-1', methods=['POST', 'GET'])
 @login_required
 def ket_qua_trung_thau():
     dot_thau = DotThau.query.filter_by(hospital=current_user.hospital).all()
@@ -217,8 +217,60 @@ def ket_qua_trung_thau():
     if 'id' in request.form:
         id = request.form['id']
         dt = DotThau.query.filter_by(id=int(id)).first()
-        return jsonify(dot_thau_dict=dt.dot_thau_to_dict(), codes=codes)
-    return jsonify(codes=codes)
+
+        results = KetQuaTrungThau.query.filter(KetQuaTrungThau.hospital_id == current_user.hospital.id,
+                                               KetQuaTrungThau.dot_thau_id == dt.id).all()
+        bao_cao_dict = []
+        for r in results:
+            try:
+                tht = TongHopThau.query.filter_by(thuoc_id=r.thuoc_id).first()
+                if tht:
+                    tong_su_dung = tht.tong_su_dung
+                    con_lai = tht.con_lai if tht.con_lai != 0 else '0'
+                else:
+                    tong_su_dung = '0'
+                    con_lai = r.so_luong
+                bao_cao_dict.append(
+                    {'Mã thuốc BV': r.thuoc.codeBV, 'Tên thuốc': r.thuoc.name, 'Hoạt chất': r.hoat_chat.name,
+                     'Hàm lượng': r.ham_luong.name,
+                     'SĐK': r.thuoc.sdk, 'Đường dùng': r.duong_dung.name,
+                     'Nhóm Dược lý': r.hoat_chat.nhom_duoc_ly_bv.name if r.hoat_chat.nhom_duoc_ly_bv else '',
+                     'Nhóm Hóa dược': r.hoat_chat.nhom_hoa_duoc_bv.name if r.hoat_chat.nhom_duoc_ly_bv else '',
+                     'Dạng bào chế': r.dang_bao_che.name, 'Quy cách đóng gói': r.quy_cach_dong_goi.name,
+                     'Đơn vị tính': r.don_vi_tinh.name, 'Cơ sở sản xuất': r.co_so_san_xuat.name,
+                     'Nước sản xuất': r.nuoc_san_xuat.name, 'Nội/Ngoại': r.nuoc_san_xuat.place,
+                     'Nhà thầu': r.nha_thau.name, 'Nhóm thầu': r.nhom_thau.name,
+                     'Kế hoạch': r.so_luong,
+                     'Sử dụng': tong_su_dung,
+                     'Còn lại': con_lai})
+            except Exception as e:
+                print(e)
+                break
+        return jsonify(dot_thau_dict=dt.dot_thau_to_dict(), codes=codes, bao_cao_dict=bao_cao_dict)
+    dot_thau_dict = [dt.dot_thau_to_dict() for dt in dot_thau]
+    import_history = ImportHistory.query.filter_by(hospital=current_user.hospital).order_by(
+        ImportHistory.time.desc()).all()
+    import_history_dict = []
+    for i in import_history:
+        import_history_dict.append(i.import_history_to_dict())
+    return jsonify(codes=codes, dot_thau_dict=dot_thau_dict, import_history_dict=import_history_dict)
+
+
+@app.route('/end-dot-thau', methods=['POST'])
+@login_required
+def end_dot_thau():
+    state = request.form['state']
+    dot_thau_id = int(request.form['dot_thau_id'])
+
+    dt = DotThau.query.get(dot_thau_id)
+    if state == 'true':
+        dt.end = 1
+        db.session.commit()
+        return jsonify(message=f'Đã kết thúc đợt thầu {dt.code}.')
+    else:
+        dt.end = None
+        db.session.commit()
+        return jsonify(message=f'Đợt thầu {dt.code} tiếp tục.')
 
 
 DM = ['thuoc', 'hoat_chat', 'ham_luong', 'duong_dung', 'dang_bao_che', 'quy_cach_dong_goi', 'don_vi_tinh',
@@ -234,103 +286,123 @@ COLUMNS = ['Tên thuốc', 'Hoạt chất', 'Hàm lượng', 'Đường dùng', 
 @app.route('/save-file', methods=['POST'])
 @login_required
 def save_file():
-    hospital_id = current_user.hospital.id
-    data = request.get_json()
-    dt = DotThau.query.filte(
-        DotThau.id == int(data['maDotThau'], DotThau.hospital_id == current_user.hospital.id)).first()
-    dot_thau_id = dt.id
-    ih = ImportHistory(dot_thau_id=dot_thau_id, hospital_id=hospital_id)
-    db.session.add(ih)
-    db.session.flush()
-    import_history_id = ih.id
-    results = data['data']
-    for r in results:
-        kq = KetQuaTrungThau(hospital_id=hospital_id, dot_thau_id=dot_thau_id, import_history_id=import_history_id)
-        for i in range(len(MODELS) - 3):
-            if COLUMNS[i] == "Tên thuốc":
-                thuoc = r["SĐK"].strip()
-                thuoc_db = Thuoc.query.filter(Thuoc.sdk == thuoc, Thuoc.hospital_id == hospital_id).first()
-                if not thuoc_db:
-                    t = Thuoc(name=r["Tên thuốc"].strip(), cch=f';{r["Tên thuốc"].strip()};', sdk=r['SĐK'],
-                              codeBV=r['Mã thuốc BV'], ven=r['VEN'], hospital_id=hospital_id)
-                    db.session.add(t)
-                    db.session.flush()
-                    t.code = f'TH{t.id:05}'
-                    thuoc_id = t.id
-                else:
-                    thuoc_id = thuoc_db.id
-                kq.thuoc_id = thuoc_id
-            elif COLUMNS[i] == "Hoạt chất":
-                hoatchat = r["Hoạt chất"].strip()
-                hoatchat_db = HoatChat.query.filter(HoatChat.cch.ilike(f';{hoatchat};'),
-                                                    HoatChat.hospital_id == hospital_id).first()
-                if not hoatchat_db:
-                    h = HoatChat(name=hoatchat, cch=f';{hoatchat};', hospital_id=hospital_id)
-                    hcsyt = HoatChatSYT.query.filter(func.lower(HoatChatSYT.name) == hoatchat.lower()).first()
-                    if hcsyt:
-                        h.hoat_chat_syt_id = hcsyt.id
-                    hctt20 = HoatChatTT20.query.filter(func.lower(HoatChatTT20.name) == hoatchat.lower()).first()
-                    if hctt20:
-                        h.hoat_chat_tt20_id = hctt20.id
-                        h.nhom_duoc_ly_bv_id = NhomDuocLyBV.query.filter_by(
-                            name=hctt20.tt20[0].nhom_duoc_ly.name).first().id
-                        h.nhom_hoa_duoc_bv_id = NhomHoaDuocBV.query.filter_by(
-                            name=hctt20.tt20[0].nhom_hoa_duoc.name).first().id
-                    db.session.add(h)
-                    db.session.flush()
-                    h.code = f'HC{h.id:05}'
-                    hoat_chat_id = h.id
-                else:
-                    hoat_chat_id = hoatchat_db.id
-                kq.hoat_chat_id = hoat_chat_id
-            elif COLUMNS[i] == "Nước sản xuất":
-                nuocsanxuat = r['Nước sản xuất'].strip()
-                nuocsanxuat_db = NuocSanXuat.query.filter(NuocSanXuat.cch.ilike(f';{nuocsanxuat};'),
-                                                          NuocSanXuat.hospital_id == hospital_id).first()
-                if not nuocsanxuat_db:
-                    n = NuocSanXuat(name=nuocsanxuat, cch=f';{nuocsanxuat};', hospital_id=hospital_id)
-                    if nuocsanxuat.lower() in ['việt nam', 'vn']:
-                        n.place = 'Nội'
+    try:
+        hospital_id = current_user.hospital.id
+        data = request.get_json()
+        dt = DotThau.query.filter(
+            DotThau.id == int(data['maDotThau']), DotThau.hospital_id == current_user.hospital.id).first()
+        dot_thau_id = dt.id
+        ih = ImportHistory(dot_thau_id=dot_thau_id, hospital_id=hospital_id)
+        db.session.add(ih)
+        db.session.flush()
+        import_history_id = ih.id
+        results = data['data']
+        for r in results:
+            kq = KetQuaTrungThau(hospital_id=hospital_id, dot_thau_id=dot_thau_id, import_history_id=import_history_id)
+            for i in range(len(MODELS) - 3):
+                if COLUMNS[i] == "Tên thuốc":
+                    thuoc = r["Mã thuốc BV"].strip()
+                    thuoc_db = Thuoc.query.filter(Thuoc.codeBV == thuoc, Thuoc.hospital_id == hospital_id).first()
+                    if not thuoc_db:
+                        thuoc_cung_ten = Thuoc.query.filter(Thuoc.cch.ilike(f'%;{r["Tên thuốc"].strip()};%'),
+                                                            Thuoc.hospital_id == hospital_id).first()
+                        t = Thuoc(name=r["Tên thuốc"].strip(), cch=f';{r["Tên thuốc"].strip()};', sdk=r['SĐK'],
+                                  codeBV=r['Mã thuốc BV'], ven=r['VEN'], hospital_id=hospital_id)
+                        db.session.add(t)
+                        db.session.flush()
+
+                        if thuoc_cung_ten:
+                            t.code = thuoc_cung_ten.code
+                            print(thuoc_cung_ten)
+                        else:
+                            t.code = f'TH{t.id:05}'
+                            print(2)
+                        thuoc_id = t.id
                     else:
-                        n.place = 'Ngoại'
-                    db.session.add(n)
-                    db.session.flush()
-                    nuoc_san_xuat_id = n.id
+                        thuoc_id = thuoc_db.id
+                    kq.thuoc_id = thuoc_id
+                elif COLUMNS[i] == "Hoạt chất":
+                    hoatchat = r["Hoạt chất"].strip()
+                    hoatchat_db = HoatChat.query.filter(HoatChat.cch.ilike(f'%;{hoatchat};%'),
+                                                        HoatChat.hospital_id == hospital_id).first()
+                    if not hoatchat_db:
+                        h = HoatChat(name=hoatchat, cch=f';{hoatchat};', hospital_id=hospital_id)
+                        hcsyt = HoatChatSYT.query.filter(func.lower(HoatChatSYT.name) == hoatchat.lower()).first()
+                        if hcsyt:
+                            h.hoat_chat_syt_id = hcsyt.id
+                        hctt20 = HoatChatTT20.query.filter(func.lower(HoatChatTT20.name) == hoatchat.lower()).first()
+                        if hctt20:
+                            h.hoat_chat_tt20_id = hctt20.id
+                            h.nhom_duoc_ly_bv_id = NhomDuocLyBV.query.filter_by(
+                                name=hctt20.tt20[0].nhom_duoc_ly.name).first().id
+                            h.nhom_hoa_duoc_bv_id = NhomHoaDuocBV.query.filter_by(
+                                name=hctt20.tt20[0].nhom_hoa_duoc.name).first().id
+                        db.session.add(h)
+                        db.session.flush()
+                        h.code = f'HC{h.id:05}'
+                        hoat_chat_id = h.id
+                    else:
+                        hoat_chat_id = hoatchat_db.id
+                    kq.hoat_chat_id = hoat_chat_id
+                elif COLUMNS[i] == "Nước sản xuất":
+                    nuocsanxuat = r['Nước sản xuất'].strip()
+                    nuocsanxuat_db = NuocSanXuat.query.filter(NuocSanXuat.cch.ilike(f'%;{nuocsanxuat};%'),
+                                                              NuocSanXuat.hospital_id == hospital_id).first()
+                    if not nuocsanxuat_db:
+                        n = NuocSanXuat(name=nuocsanxuat, cch=f';{nuocsanxuat};', hospital_id=hospital_id)
+                        if nuocsanxuat.lower() in ['việt nam', 'vn']:
+                            n.place = 'Nội'
+                        else:
+                            n.place = 'Ngoại'
+                        db.session.add(n)
+                        db.session.flush()
+                        nuoc_san_xuat_id = n.id
+                    else:
+                        nuoc_san_xuat_id = nuocsanxuat_db.id
+                    kq.nuoc_san_xuat_id = nuoc_san_xuat_id
                 else:
-                    nuoc_san_xuat_id = nuocsanxuat_db.id
-                kq.nuoc_san_xuat_id = nuoc_san_xuat_id
+                    id_name = IDS[i]
+                    obj = r[COLUMNS[i]].strip()
+                    obj_db = MODELS[i].query.filter(MODELS[i].cch.ilike(f'%;{obj};%'),
+                                                    MODELS[i].hospital_id == hospital_id).first()
+                    if not obj_db:
+                        ob = MODELS[i](name=obj, cch=f';{obj};', hospital_id=hospital_id)
+                        db.session.add(ob)
+                        db.session.flush()
+                        setattr(kq, id_name, ob.id)
+                    else:
+                        setattr(kq, id_name, obj_db.id)
+            nhom_thau = NhomThau.query.filter(
+                func.lower(NhomThau.name).ilike(func.lower(r['Nhóm thầu'].strip()))).first()
+            if nhom_thau:
+                nhom_thau_id = nhom_thau.id
             else:
-                id_name = IDS[i]
-                obj = r[COLUMNS[i]].strip()
-                obj_db = MODELS[i].query.filter(MODELS[i].cch.ilike(f';{obj};'),
-                                                MODELS[i].hospital_id == hospital_id).first()
-                if not obj_db:
-                    ob = MODELS[i](name=obj, cch=f';{obj};', hospital_id=hospital_id)
-                    db.session.add(ob)
-                    db.session.flush()
-                    setattr(kq, id_name, ob.id)
-                else:
-                    setattr(kq, id_name, obj_db.id)
+                nhom_thau_id = NhomThau.query.filter_by(name='None').first().id
 
-        nhom_thau_id = NhomThau.query.filter(
-            func.lower(NhomThau.name).ilike(func.lower(r['Nhóm thầu'].strip()))).first().id
-        so_luong = int(r['Số lượng'].replace(',', ''))
-        don_gia = float(r['Đơn giá'].replace(',', ''))
-        thanh_tien = int(r['Thành tiền'].replace(',', ''))
+            so_luong_str = r['Số lượng'].replace(',', '').replace('.', '')
+            don_gia_str = r['Đơn giá'].replace(',', '').replace('.', '')
+            thanh_tien_str = r['Thành tiền'].replace(',', '').replace('.', '')
 
-        kq.nhom_thau_id = nhom_thau_id
-        kq.so_luong = so_luong
-        kq.thanh_tien = thanh_tien
-        kq.don_gia = don_gia
-        db.session.add(kq)
+            so_luong = int(so_luong_str) if so_luong_str else 0
+            don_gia = float(don_gia_str) if don_gia_str else 0.0
+            thanh_tien = int(thanh_tien_str) if thanh_tien_str else 0
 
-    db.session.commit()
-    import_history = ImportHistory.query.filter_by(hospital=current_user.hospital).order_by(
-        ImportHistory.time.desc()).all()
-    import_history_dict = []
-    for i in import_history:
-        import_history_dict.append(i.import_history_to_dict())
-    return jsonify(import_history_dict=import_history_dict)
+            kq.nhom_thau_id = nhom_thau_id
+            kq.so_luong = so_luong
+            kq.thanh_tien = thanh_tien
+            kq.don_gia = don_gia
+            db.session.add(kq)
+
+        db.session.commit()
+        import_history = ImportHistory.query.filter_by(hospital=current_user.hospital).order_by(
+            ImportHistory.time.desc()).all()
+        import_history_dict = []
+        for i in import_history:
+            import_history_dict.append(i.import_history_to_dict())
+        return jsonify(import_history_dict=import_history_dict)
+    except Exception as e:
+        print(e)
+        return jsonify({'message': 'Đã có lỗi xảy ra, vui lòng thử lại sau.'})
 
 
 @app.route('/delete-import-history', methods=['POST'])
@@ -357,6 +429,7 @@ def bao_cao():
         try:
             bao_cao_dict.append(
                 {'Tên thuốc': r.thuoc.name, 'Hoạt chất': r.hoat_chat.name, 'Hàm lượng': r.ham_luong.name,
+                 'Mã thuốc BV': r.thuoc.codeBV,
                  'SĐK': r.thuoc.sdk, 'Đường dùng': r.duong_dung.name,
                  'Nhóm Dược lý': r.hoat_chat.nhom_duoc_ly_bv.name if r.hoat_chat.nhom_duoc_ly_bv else '',
                  'Nhóm Hóa dược': r.hoat_chat.nhom_hoa_duoc_bv.name if r.hoat_chat.nhom_duoc_ly_bv else '',
@@ -365,7 +438,8 @@ def bao_cao():
                  'Nước sản xuất': r.nuoc_san_xuat.name, 'Nội/Ngoại': r.nuoc_san_xuat.place,
                  'Nhà thầu': r.nha_thau.name, 'Nhóm thầu': r.nhom_thau.name,
                  'Số lượng': r.so_luong,
-                 'Đơn giá': r.don_gia, 'Thành tiền': r.thanh_tien, 'Đợt thầu': r.dot_thau.code,
+                 'Đơn giá': r.don_gia, 'Thành tiền': r.thanh_tien, 'VEN': r.thuoc.ven,
+                 'Đợt thầu': r.dot_thau.code,
                  'Số QĐ': r.dot_thau.soQD,
                  'Ngày QĐ': str(r.dot_thau.ngayQD),
                  'Ngày hết hạn': str(r.dot_thau.ngayHH)})
@@ -447,23 +521,39 @@ def luu_hoat_chat():
 @login_required
 def gop_gia_tri():
     danh_muc = request.form['danh_muc']
-    index = DM.index(danh_muc)
-    model = MODELS[index]
-    id_name = IDS[index]
-    id_col = getattr(KetQuaTrungThau, id_name)
+    if danh_muc == 'thuoc':
+        id_list = request.form.getlist('id_list[]')
+        last_id = id_list.pop()
 
-    id_list = request.form.getlist('id_list[]')
-    last_id = id_list.pop()
-    for record in KetQuaTrungThau.query.filter(id_col.in_(id_list),
-                                               KetQuaTrungThau.hospital_id == current_user.hospital.id):
-        setattr(record, id_name, last_id)
-    last_obj = model.query.get(int(last_id))
-    delete_obj = model.query.filter(model.id.in_(id_list)).all()
-    for o in delete_obj:
-        last_obj.cch += o.cch
-        db.session.delete(o)
-    db.session.commit()
-    query = model.query.filter_by(hospital=current_user.hospital).order_by(model.name.asc()).all()
+        last_thuoc = Thuoc.query.get(int(last_id))
+        last_code = last_thuoc.code
+        last_name = last_thuoc.name
+        for id in id_list:
+            thuoc = Thuoc.query.get(int(id))
+            thuoc.code = last_code
+            last_thuoc.cch += f';{thuoc.name};'
+            thuoc.name = last_name
+            thuoc.cch += f';{thuoc.name};'
+        db.session.commit()
+        query = Thuoc.query.filter_by(hospital=current_user.hospital).order_by(Thuoc.name.asc()).all()
+    else:
+        index = DM.index(danh_muc)
+        model = MODELS[index]
+        id_name = IDS[index]
+        id_col = getattr(KetQuaTrungThau, id_name)
+
+        id_list = request.form.getlist('id_list[]')
+        last_id = id_list.pop()
+        for record in KetQuaTrungThau.query.filter(id_col.in_(id_list),
+                                                   KetQuaTrungThau.hospital_id == current_user.hospital.id):
+            setattr(record, id_name, last_id)
+        last_obj = model.query.get(int(last_id))
+        delete_obj = model.query.filter(model.id.in_(id_list)).all()
+        for o in delete_obj:
+            last_obj.cch += o.cch
+            db.session.delete(o)
+        db.session.commit()
+        query = model.query.filter_by(hospital=current_user.hospital).order_by(model.name.asc()).all()
     danh_muc_dict = [t.danh_muc_to_dict() for t in query]
     return jsonify(danh_muc_dict=danh_muc_dict)
 
@@ -537,7 +627,7 @@ def theo_doi_cung_ung(url):
 
 @app.route('/ket-qua-cung-ung', methods=['GET'])
 def final_ket_qua_cung_ung():
-    ketQuaCungUng = ket_qua_cung_ung('KHO')
+    ketQuaCungUng = ket_qua_cung_ung('NXT')
     return jsonify(ketQuaCungUng=ketQuaCungUng)
 
 
@@ -564,7 +654,7 @@ def file_cung_ung():
     thuoc_not_available = []
     if file:
         time = request.form.get('month')
-        year, month = time.split('-');
+        year, month = time.split('-')
         month = datetime(int(year), int(month), 1)
         db.session.query(FileInformation).filter(FileInformation.hospital_id == current_user.hospital.id).delete()
         if not ImportHistoryNXT.query.filter(ImportHistoryNXT.name == file.filename,
@@ -580,16 +670,21 @@ def file_cung_ung():
                 t = Thuoc.query.filter(Thuoc.hospital_id == current_user.hospital.id, Thuoc.codeBV == code).first()
                 if t:
                     thuoc_id = t.id
-                    ton_bv = int(df.loc[i, 'Ton BV'])
-                    nhap = int(df.loc[i, 'Nhap'])
-                    xuat = int(df.loc[i, 'Xuat'])
-                    ton_cuoi_bv = int(df.loc[i, 'Ton Cuoi BV'])
                     kq = KetQuaTrungThau.query.filter(KetQuaTrungThau.hospital_id == current_user.hospital.id,
                                                       KetQuaTrungThau.thuoc_id == thuoc_id).first()
-                    dot_thau_id = kq.dot_thau_id
-                    r = NXT(thuoc_id=thuoc_id, ton_bv=ton_bv, nhap=nhap, xuat=xuat, ton_cuoi_bv=ton_cuoi_bv,
-                            import_history_id=ih.id, hospital_id=current_user.hospital.id, dot_thau_id=dot_thau_id)
-                    db.session.add(r)
+                    if kq:
+                        ton_bv = int(df.loc[i, 'Ton BV'])
+                        nhap = int(df.loc[i, 'Nhap'])
+                        xuat = int(df.loc[i, 'Xuat'])
+                        ton_cuoi_bv = int(df.loc[i, 'Ton Cuoi BV'])
+                        kq = KetQuaTrungThau.query.filter(KetQuaTrungThau.hospital_id == current_user.hospital.id,
+                                                          KetQuaTrungThau.thuoc_id == thuoc_id).first()
+                        dot_thau_id = kq.dot_thau_id
+                        r = NXT(thuoc_id=thuoc_id, ton_bv=ton_bv, nhap=nhap, xuat=xuat, ton_cuoi_bv=ton_cuoi_bv,
+                                import_history_id=ih.id, hospital_id=current_user.hospital.id, dot_thau_id=dot_thau_id)
+                        db.session.add(r)
+                    else:
+                        thuoc_not_available.append(df.loc[i, 'Service Name'])
                 else:
                     thuoc_not_available.append(df.loc[i, 'Service Name'])
         else:
@@ -599,25 +694,22 @@ def file_cung_ung():
             return jsonify(flash_messages=flash_messages)
     db.session.query(TongHopThau).filter(TongHopThau.hospital_id == current_user.hospital.id).delete()
     db.session.query(ThongKeKho).filter(ThongKeKho.hospital_id == current_user.hospital.id).delete()
-    danh_sach_thuoc = db.session.query(NXT.thuoc_id).filter(NXT.hospital == current_user.hospital).distinct().all()
+    danh_sach_thuoc = db.session.query(NXT.thuoc_id).filter(NXT.hospital == current_user.hospital,
+                                                            NXT.nhap > 0).distinct().all()
     for t in danh_sach_thuoc:
-        tongKeHoach = db.session.query(func.sum(KetQuaTrungThau.so_luong)). \
-            filter(KetQuaTrungThau.hospital == current_user.hospital,
-                   KetQuaTrungThau.thuoc_id == t.thuoc_id).scalar()
-        ngayThau = db.session.query(DotThau.ngayQD).join(KetQuaTrungThau,
-                                                         KetQuaTrungThau.dot_thau_id == DotThau.id). \
-            filter(KetQuaTrungThau.thuoc_id == t.thuoc_id,
-                   KetQuaTrungThau.hospital_id == current_user.hospital.id).order_by(DotThau.ngayQD.desc()).limit(
-            1).scalar()
-        ngayHH = db.session.query(DotThau.ngayHH).join(KetQuaTrungThau,
-                                                       KetQuaTrungThau.dot_thau_id == DotThau.id). \
-            filter(KetQuaTrungThau.thuoc_id == t.thuoc_id,
-                   KetQuaTrungThau.hospital_id == current_user.hospital.id).order_by(DotThau.ngayQD.desc()).limit(
-            1).scalar()
+        ketQuaTrungThau = KetQuaTrungThau.query.filter(KetQuaTrungThau.hospital == current_user.hospital,
+                                                       KetQuaTrungThau.thuoc_id == t.thuoc_id).first()
+        tongKeHoach = ketQuaTrungThau.so_luong
+        ngayThau = ketQuaTrungThau.dot_thau.ngayQD
+        ngayHH = ketQuaTrungThau.dot_thau.ngayHH
+
         # Thong ke kho
         duTruConLai = tongKeHoach
-        nhap_chan = NXT.query.filter(NXT.thuoc_id == t.thuoc_id, NXT.nhap > 0,
-                                     NXT.hospital_id == current_user.hospital.id).all()
+        nhap_chan = NXT.query. \
+            join(ImportHistoryNXT, ImportHistoryNXT.id == NXT.import_history_id). \
+            filter(NXT.thuoc_id == t.thuoc_id, NXT.nhap > 0,
+                   NXT.hospital_id == current_user.hospital.id). \
+            order_by(ImportHistoryNXT.month).all()
         sumNhapChan = 0
         trungBinhNhapChan = 0
         soLanNhap = 0
@@ -637,9 +729,7 @@ def file_cung_ung():
         # Tong hop thau
         tongSuDung = db.session.query(func.sum(ThongKeKho.nhap_chan)).filter(
             ThongKeKho.hospital == current_user.hospital,
-            ThongKeKho.thuoc_id == t.thuoc_id,
-            ThongKeKho.ngay_nhap_chan >= ngayThau,
-            ThongKeKho.ngay_nhap_chan <= ngayHH
+            ThongKeKho.thuoc_id == t.thuoc_id
         ).scalar()
         if not tongSuDung:
             tongSuDung = 0
@@ -700,8 +790,9 @@ def ket_qua_cung_ung(data):
     if data == 'NXT':
         print(1)
         results = db.session.query(NXT.id, NXT.thuoc_id, func.sum(NXT.nhap), NXT.import_history_id).filter(
-            NXT.nhap > 0, NXT.hospital_id == current_user.hospital.id).\
-            join(ImportHistoryNXT, ImportHistoryNXT.id == NXT.import_history_id).\
+            NXT.nhap > 0, NXT.hospital_id == current_user.hospital.id). \
+            join(ImportHistoryNXT, ImportHistoryNXT.id == NXT.import_history_id). \
+            join(DotThau, DotThau.id == NXT.dot_thau_id). \
             group_by(
             NXT.thuoc_id, NXT.import_history_id, NXT.id).order_by(ImportHistoryNXT.month).all()
         for r in results:
@@ -710,17 +801,9 @@ def ket_qua_cung_ung(data):
             row.append(nxt.thuoc.name)
             row.append(nxt.import_history.month.strftime("%Y-%m-%d"))
             row.append(nxt.nhap)
-            month = nxt.import_history.month
-            kqtts = nxt.thuoc.ketquatrungthaus
-            dotthaus = [kq.dot_thau for kq in kqtts]
-            sorted_lst_dotthau = sorted(dotthaus, key=lambda DotThau: DotThau.ngayQD, reverse=True)
-            for dt in sorted_lst_dotthau:
-                if month > dt.ngayQD:
-                    row.append(dt.code)
-                    break
+            row.append(nxt.dot_thau.code)
             suDungTheoThang.append(row)
         ketQuaCungUng['suDungTheoThang'] = suDungTheoThang
-        print(suDungTheoThang)
     elif data == 'KHO':
         print(2)
         results = db.session.query(KhoChan.thuoc_id,
@@ -730,21 +813,16 @@ def ket_qua_cung_ung(data):
                                        func.lpad(func.extract('month', KhoChan.time), 2, '0')
                                    ).label('year_month'),
                                    func.sum(KhoChan.nhap).label('nhap'),
-                                   KhoChan.file_id
+                                   KhoChan.file_id,
+                                   KhoChan.dot_thau_id
                                    ).filter(KhoChan.nhap > 0, KhoChan.hospital_id == current_user.hospital.id
-                                            ).group_by('year_month', KhoChan.file_id, KhoChan.thuoc_id
-                                                       ).order_by(func.max(KhoChan.time)).all()
+                                            ). \
+            group_by('year_month', KhoChan.file_id, KhoChan.thuoc_id, KhoChan.dot_thau_id
+                     ).order_by(func.max(KhoChan.time)).all()
         for r in results:
             row = [r.file_id, r.thuoc_id, Thuoc.query.filter_by(id=r.thuoc_id).first().name, r.year_month, r.nhap]
-            month = datetime.strptime(r.year_month, '%Y-%m').date()
-            kqtts = KetQuaTrungThau.query.filter(KetQuaTrungThau.thuoc_id == r.thuoc_id,
-                                                 KetQuaTrungThau.hospital_id == current_user.hospital.id).all()
-            dotthaus = [kq.dot_thau for kq in kqtts]
-            sorted_lst_dotthau = sorted(dotthaus, key=lambda DotThau: DotThau.ngayQD, reverse=True)
-            for dt in sorted_lst_dotthau:
-                if month > dt.ngayQD:
-                    row.append(dt.code)
-                    break
+            dt = DotThau.query.get(r.dot_thau_id)
+            row.append(dt.code)
             suDungTheoThang.append(row)
         ketQuaCungUng['suDungTheoThang'] = suDungTheoThang
     thongkekho = []
@@ -811,6 +889,7 @@ def insertKho(df, KhoModel, thuoc_id, file_id):
     fs = KhoModel.query.filter(KhoModel.hospital_id == current_user.hospital_id, KhoModel.file_id == file_id).all()
     if len(fs) > 0:
         db.session.delete(fs)
+    first_row = df.iloc[2].tolist()
     for i in range(2, df.shape[0] - 1):
         row = df.iloc[i].tolist()
         ngay = row[0]
@@ -819,6 +898,10 @@ def insertKho(df, KhoModel, thuoc_id, file_id):
         xuat = int(row[5])
         r = KhoModel(file_id=file_id, time=ngay, thuoc_id=thuoc_id, nhap=nhap, xuat=xuat, ton=ton,
                      hospital_id=current_user.hospital.id)
+        if KhoModel == KhoChan:
+            dt = DotThau.query.filter(DotThau.hospital_id == current_user.hospital_id, DotThau.ngayQD < first_row[0]). \
+                order_by(DotThau.ngayQD.desc()).first()
+            r.dot_thau_id = dt.id
         db.session.add(r)
     db.session.commit()
 

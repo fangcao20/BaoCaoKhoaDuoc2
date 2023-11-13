@@ -68,6 +68,7 @@ var chartNHD = new Chart(ctxNHD, {
 })
 $.get('/ket-qua-cung-ung'
 ).done(function (response) {
+    document.getElementById('load_data_notice').style.display = 'none';
     var ketQuaCungUng = response.ketQuaCungUng;
     if (ketQuaCungUng) {
         hienThiKetQuaCungUng(ketQuaCungUng);
@@ -286,6 +287,10 @@ const gridTheoThang = {
     sortable: true,
     filter: 'agNumberColumnFilter',
     cellClass: 'ag-right-aligned-cell',
+    filterParams: {
+      buttons: ['reset'],
+      closeOnApply: true,
+    },
   },
   animateRows: true,
   localeText: getLocale(),
@@ -776,7 +781,7 @@ function hienThiKetQuaCungUng(ketQuaCungUng) {
                 du_tru_con_lai.push(parseInt(row[6]));
             }
         }
-        var label_data = ['Ngày nhập kho chẵn', 'Tồn kho lẻ', 'Trung bình nhập chẵn', 'Dự trù còn lại'];
+        var label_data = ['Nhập kho chẵn', 'Tồn kho lẻ', 'Trung bình nhập chẵn', 'Dự trù còn lại'];
         var borderColor_data = ['#ff6384', '#36a2eb', '#ffcd56', '#4bc0c0'];
         var data_list = [ngay_nhap_kho_chan, ton_kho_le, trung_binh_nhap_chan, du_tru_con_lai];
         chartThuoc.data.labels = labels;
