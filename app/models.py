@@ -154,19 +154,21 @@ class DotThau(db.Model):
     ngayQD = db.Column(db.Date, index=True)
     ngayHH = db.Column(db.Date, index=True)
     note = db.Column(db.String(500), index=True)
+    end = db.Column(db.Integer, index=True)  # 1: True, Null: False
     hospital_id = db.Column(db.Integer, db.ForeignKey('hospital.id', ondelete='CASCADE', onupdate='CASCADE'),
                             nullable=False)
 
     ketquatrungthaus = db.relationship('KetQuaTrungThau', cascade="all,delete", backref='dot_thau', lazy='dynamic')
     importhistory = db.relationship('ImportHistory', cascade="all,delete", backref='dot_thau', lazy='dynamic')
     nxts = db.relationship('NXT', cascade="all,delete", backref='dot_thau', lazy='dynamic')
+    khochans = db.relationship('KhoChan', cascade="all,delete", backref='dot_thau', lazy='dynamic')
 
     def __repr__(self):
         return '<DotThau {}>'.format(self.name)
 
     def dot_thau_to_dict(self):
         return {'id': self.id, 'code': self.code, 'name': self.name, 'phase': self.phase, 'formality': self.formality,
-                'soQD': self.soQD, 'ngayQD': self.ngayQD, 'ngayHH': self.ngayHH, 'note': self.note}
+                'soQD': self.soQD, 'ngayQD': self.ngayQD, 'ngayHH': self.ngayHH, 'note': self.note, 'end': self.end}
 
 
 class ImportHistory(db.Model):
@@ -548,6 +550,8 @@ class KhoChan(db.Model):
                         nullable=False)
     hospital_id = db.Column(db.Integer, db.ForeignKey('hospital.id', ondelete='CASCADE', onupdate='CASCADE'),
                             nullable=False)
+    dot_thau_id = db.Column(db.Integer,
+                            db.ForeignKey('dot_thau.id', ondelete='CASCADE', onupdate='CASCADE'))
 
     def __repr__(self):
         return '<KhoChan {}>'.format(self.time)
