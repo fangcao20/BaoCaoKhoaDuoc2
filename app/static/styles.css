@@ -122,3 +122,8 @@ th, td {
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
+.table-cung-ung {
+    max-height: 550px;
+    overflow: auto;
+  }

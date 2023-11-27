@@ -281,7 +281,7 @@ function show_table_history(import_history_dict) {
             <tr>
                 <td>${a}</td>
                 <td>${i.code}</td>
-                <td>${i.time}</td>
+                <td>${formatDate(i.time)}</td>
                 <td><button type="button" class="btn btn-link btn-sm btn-rounded text-danger" onclick="xoaDuLieuImport(${i.id})">Xoá</button></td>
                 <td style="display: none">${i.id}</td>
             </tr>

@@ -1,13 +1,29 @@
 $.get('/xay-dung-danh-muc-data'
 ).done(function(response){
-    console.log(response);
     var ketQuaXDDM = response.ketQuaXDDM;
     if (ketQuaXDDM) {
         updateXayDungDanhMuc(ketQuaXDDM);
     }
 }).fail(function() {
-    console.log('Lỗi: Không thể kết nối với máy chủ.');
+    console.log('Lỗi: Không thể kết nối với máy chủ. Vui lòng thử lại sau.');
 })
+
+function select_date() {
+    console.log('here');
+    var date_from = document.getElementById('date_from').value;
+    var date_to = document.getElementById('date_to').value;
+
+    $.post('/date-xay-dung-danh-muc', {'date_from': date_from, 'date_to': date_to
+    }).done(function(response){
+        console.log(response);
+        var ketQuaXDDM = response.ketQuaXDDM;
+        if (ketQuaXDDM) {
+            updateXayDungDanhMuc(ketQuaXDDM);
+        }
+        }).fail(function() {
+            alert('Lỗi: Không thể kết nối với máy chủ. Vui lòng thử lại sau.');
+        })
+}
 
 function setSelectXDDM(xayDungDanhMuc) {
     var hoatchatlist = xayDungDanhMuc.hoatchatlist;
@@ -23,10 +39,9 @@ function setSelectXDDM(xayDungDanhMuc) {
 const gridXayDungDanhMuc = {
   columnDefs: [
         { headerName: 'STT', field: 'stt', filter: true, minWidth: 80, maxWidth: 80, pinned: 'left' },
-        { headerName: 'Mã đợt thầu', field: 'maDotThau', filter: true, pinned: 'left'  },
         { headerName: 'Tên thuốc', field: 'tenThuoc', filter: true, pinned: 'left'  },
         { headerName: 'Hoạt chất', field: 'hoatChat', filter: true, pinned: 'left'  },
-        { headerName: 'Hàm lượng', field: 'hamLuong', filter: true, pinned: 'left'  },
+        { headerName: 'Hàm lượng', field: 'hamLuong', filter: true },
         { headerName: 'SĐK', field: 'sDK', filter: true },
         { headerName: 'Đường dùng', field: 'duongDung', filter: true },
         { headerName: 'Dạng bào chế', field: 'dangBaoChe', filter: true },
@@ -36,6 +51,8 @@ const gridXayDungDanhMuc = {
         { headerName: 'Nước sản xuất', field: 'nuocSanXuat', filter: true },
         { headerName: 'Nhà thầu', field: 'nhaThau', filter: true },
         { headerName: 'Nhóm thầu', field: 'nhomThau', filter: true },
+        { headerName: 'Mã đợt thầu', field: 'maDotThau', width: 100, filter: true },
+        { headerName: 'Ngày QĐ', field: 'ngayQD', width: 100, filter: true },
         { headerName: 'Số lượng', field: 'soLuong', filter: 'agNumberColumnFilter',
             cellClass: 'ag-right-aligned-cell', valueFormatter: numberFormatter },
         { headerName: 'Giá', field: 'donGia', filter: 'agNumberColumnFilter',
@@ -88,7 +105,7 @@ function updateXayDungDanhMuc(xayDungDanhMuc) {
 }
 
 function updateData(danhmuc) {
-    var cols = ['maDotThau', 'tenThuoc', 'hoatChat', 'hamLuong', 'sDK', 'duongDung', 'dangBaoChe', 'quyCachDongGoi', 'donViTinh', 'coSoSanXuat',
+    var cols = ['maDotThau', 'ngayQD', 'tenThuoc', 'hoatChat', 'hamLuong', 'sDK', 'duongDung', 'dangBaoChe', 'quyCachDongGoi', 'donViTinh', 'coSoSanXuat',
     'nuocSanXuat', 'nhaThau', 'nhomThau', 'soLuong', 'donGia', 'thanhTien', 'nhomDuocLy', 'nhomHoaDuoc', 'ABC', 'VEN']
     var hoatChat = document.querySelector('#selectHoatChatXDDM').value;
     var rowData = [];
@@ -106,7 +123,7 @@ function updateData(danhmuc) {
             rowData.push(rowDict);
             stt++;
         } else {
-            if (row[2] === hoatChat) {
+            if (row[3] === hoatChat) {
                 for (i = 0; i < row.length; i++) {
                     rowDict[cols[i]] = row[i];
                 }

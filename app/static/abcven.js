@@ -1,6 +1,5 @@
 $.get('/nhap-du-lieu-abc-ven'
 ).done(function(response){
-    console.log(response);
     var ketQuaABCVEN = response.ketQuaABCVEN;
     if (ketQuaABCVEN) {
         hienThiABCVEN(ketQuaABCVEN);
@@ -9,13 +8,17 @@ $.get('/nhap-du-lieu-abc-ven'
     console.log('Lỗi: Không thể kết nối với máy chủ.');
 })
 
-function available_1_time() {
+function available_1_time(btn) {
+    var div = document.createElement('div');
+    div.innerHTML = `<img src="/static/loading.gif" alt="">Đang tải dữ liệu, vui lòng chờ trong giây lát.`;
+    btn.parentElement.appendChild(div);
     destroy_chart();
     var date_from = $('#a1tfrom')[0].value;
     var date_to = $('#a1tto')[0].value;
     $.post('/nhap-du-lieu-abc-ven', {'available_1_time': {'date_from': date_from, 'date_to': date_to}
     }).done(function(response){
         console.log(response);
+        div.remove();
         var ketQuaABCVEN = response.ketQuaABCVEN;
         if (ketQuaABCVEN) {
             hienThiABCVEN(ketQuaABCVEN);
@@ -25,12 +28,16 @@ function available_1_time() {
     })
 }
 
-function available_2_time() {
+function available_2_time(btn) {
+    var div = document.createElement('div');
+    div.innerHTML = `<img src="/static/loading.gif" alt="">Đang tải dữ liệu, vui lòng chờ trong giây lát.`;
+    btn.parentElement.appendChild(div);
     destroy_chart();
     var date_from1 = $('#a2tfrom1')[0].value;
     var date_to1 = $('#a2tto1')[0].value;
     var date_from2 = $('#a2tfrom2')[0].value;
     var date_to2 = $('#a2tto2')[0].value;
+
     document.getElementById('time').innerHTML = `<p>
         <i>So sánh T1: ${date_from1} - ${date_to1} và T2: ${date_from2} - ${date_to2}</i>
     </p>`;
@@ -38,6 +45,7 @@ function available_2_time() {
         'available_2_time': {'date_from1': date_from1, 'date_to1': date_to1,
                             'date_from2': date_from2, 'date_to2': date_to2}
     }).done(function(response){
+        div.remove();
         console.log(response);
         var ketQuaABCVEN = response.ketQuaABCVEN;
         if (ketQuaABCVEN) {
@@ -48,9 +56,12 @@ function available_2_time() {
     })
 }
 
-function import_1_time() {
+function import_1_time(btn) {
+    console.log('here');
+    var div = document.createElement('div');
+    div.innerHTML = `<img src="/static/loading.gif" alt="">Đang tải dữ liệu, vui lòng chờ trong giây lát.`;
+    btn.parentElement.appendChild(div);
     destroy_chart();
-    $('.loading')[0].innerHTML = '<img src="/static/loading.gif" alt="">';
     var formData = new FormData();
     var file = $('#fileABCVEN')[0].files[0];
     formData.append('file', file);
@@ -61,8 +72,7 @@ function import_1_time() {
         processData: false,
         contentType: false,
         success: function(response) {
-            $('.loading')[0].innerHTML = '';
-            alert('Cập nhật thành công!');
+            div.remove();
             console.log(response);
             var ketQuaABCVEN = response.ketQuaABCVEN;
             if (ketQuaABCVEN) {
@@ -76,9 +86,11 @@ function import_1_time() {
     });
 }
 
-function import_2_time() {
+function import_2_time(btn) {
+    var div = document.createElement('div');
+    div.innerHTML = `<img src="/static/loading.gif" alt="">Đang tải dữ liệu, vui lòng chờ trong giây lát.`;
+    btn.parentElement.appendChild(div);
     destroy_chart();
-    $('.loading')[1].innerHTML = '<img src="/static/loading.gif" alt="">';
     var formData = new FormData();
     var file1 = $('#fileABCVEN1')[0].files[0];
     var file2 = $('#fileABCVEN2')[0].files[0];
@@ -94,9 +106,8 @@ function import_2_time() {
         processData: false,
         contentType: false,
         success: function(response) {
+            div.remove();
             console.log(response);
-            $('.loading')[1].innerHTML = '';
-            alert('Cập nhật thành công!');
             var ketQuaABCVEN = response.ketQuaABCVEN;
             if (ketQuaABCVEN) {
                 hienThiABCVEN(ketQuaABCVEN);
@@ -326,6 +337,7 @@ function bangVEN(ven) {
 }
 
 function hienThiABCVEN(ketQuaABCVEN) {
+    document.getElementById('alert-abc').style.display = 'none';
     var chartABC = new Chart($('#canvas_abc')[0], {type: 'bar'});
     var abc = ketQuaABCVEN.abc;
     document.getElementById('a/abc-ven').innerHTML = bangABC(abc, chartABC);

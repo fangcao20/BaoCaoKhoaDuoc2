@@ -1,6 +1,14 @@
 {% extends "base.html" %}
 
 {% block content %}
+<div class="row" style="margin-left: 10px;">
+    <div class="col-2"><h6>Chọn khoảng thời gian:</h6></div>
+    <div class="col-2">Từ <input type="date" id="date_from"></div>
+    <div class="col-2">Đến <input type="date" id="date_to"></div>
+    <div class="col-1">
+        <button class="btn btn-secondary btn-sm" style="width: 100px" onclick="select_date()">
+            <i class="fas fa-magnifying-glass"></i></button></div>
+</div>
 <table class="table table-borderless align-middle">
     <tr>
         <td style="width: 120px"><h6>Hoạt chất:</h6></td>

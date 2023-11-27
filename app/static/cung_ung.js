@@ -66,30 +66,268 @@ var chartNHD = new Chart(ctxNHD, {
         }
     }
 })
-$.get('/ket-qua-cung-ung'
-).done(function (response) {
-    document.getElementById('load_data_notice').style.display = 'none';
-    var ketQuaCungUng = response.ketQuaCungUng;
-    if (ketQuaCungUng) {
-        hienThiKetQuaCungUng(ketQuaCungUng);
-        console.log(ketQuaCungUng);
+
+function get_thuoc_list(input) {
+    var value = input.value;
+    if (value.length == 1) {
+        $.post('/get-thuoc-list', {'startLetter': value
+        }).done(function(response) {
+            var thuoc_list = response.thuoc_list;
+            if (thuoc_list) {
+                var html = '';
+                for (const r of thuoc_list) {
+                    html += `<option>${r.code} - ${r.name}</option>`;
+                }
+                $('#datalist_thuoc')[0].innerHTML = html;
+            }
+        }).fail(function() {
+            alert('Lỗi: Không thể kết nối với máy chủ. Vui lòng thử lại sau.');
+        })
     }
-}).fail(function() {
-    console.log('Lỗi: Không thể kết nối với máy chủ.');
+    if (input.getAttribute('autocompleted') != null) {
+        var code = input.value.split(' - ')[0];
+        $.post('/cung-ung-theo-thuoc', {'code': code
+        }).done(function(response) {
+            var total = response.total;
+            if (total) {
+                document.getElementById('tongKeHoach').innerHTML = total.tong_ke_hoach.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                var daSuDungPercentage = (total.tong_su_dung * 100 / total.tong_ke_hoach).toFixed(2);
+                document.getElementById('daSuDung').innerHTML = `${total.tong_su_dung.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} (${daSuDungPercentage}%)`;
+                document.getElementById('soLanDuTru').innerHTML = total.so_lan_du_tru.toFixed(2);
+            }
+
+            var thongkekho = response.thongkekho;
+            if(thongkekho) {
+                var labels = [];
+                var ngay_nhap_kho_chan = [];
+                var ton_kho_le = [];
+                var trung_binh_nhap_chan = [];
+                var du_tru_con_lai = [];
+                var html = '';
+                for (let row of thongkekho) {
+                    html += `<tr style="display: table-row;">
+                        <td>${formatDate(row[1])}</td>
+                        <td>${row[3].toLocaleString()}</td>
+                        <td>${row[4].toLocaleString()}</td>
+                        <td>${row[5].toLocaleString()}</td>
+                        <td>${row[6].toLocaleString()}</td>
+                    </tr>`;
+                    labels.push(formatDate(row[1]));
+                    ngay_nhap_kho_chan.push(parseInt(row[3]));
+                    ton_kho_le.push(parseInt(row[4]));
+                    trung_binh_nhap_chan.push(parseInt(row[5]));
+                    du_tru_con_lai.push(parseInt(row[6]));
+
+                }
+                var label_data = ['Nhập kho chẵn', 'Tồn kho lẻ', 'Trung bình nhập chẵn', 'Dự trù còn lại'];
+                var borderColor_data = ['#ff6384', '#36a2eb', '#ffcd56', '#4bc0c0'];
+                var data_list = [ngay_nhap_kho_chan, ton_kho_le, trung_binh_nhap_chan, du_tru_con_lai];
+                chartThuoc.data.labels = labels;
+                chartThuoc.data.datasets = [];
+                for (let i = 0, n = label_data.length; i < n; i++) {
+                    chartThuoc.data.datasets.push(
+                        {
+                            label: label_data[i],
+                            data: data_list[i],
+                            borderColor: borderColor_data[i],
+                            backgroundColor: borderColor_data[i]
+                        }
+                    )
+                }
+                chartThuoc.update();
+                document.getElementById('tableThuoc').innerHTML = html;
+                console.log(chartThuoc.data);
+            }
+        }).fail(function() {
+            alert('Lỗi: Không thể kết nối với máy chủ. Vui lòng thử lại sau.');
+        })
+    }
+}
+
+function theo_nhom_thau() {
+    $.post('/get-nhom-list', {'nhom': 'nhom_thau'}
+    ).done(function(response) {
+        var hoat_chat_list = response.hoat_chat_list;
+        if (hoat_chat_list) {
+            var slHoatChat = document.getElementById('selectHoatChatCungUng');
+            slHoatChat.innerHTML = setOptions(hoat_chat_list);
+        }
+    }).fail(function() {
+        alert('Lỗi: Không thể kết nối với máy chủ. Vui lòng thử lại sau.');
+    })
+}
+
+$('#selectHoatChatCungUng').on('change', function () {
+    var hoatChatId = this.value;
+    var hoatChat = this.options[this.selectedIndex].innerText;
+    $.post('/cung-ung-theo-nhom', {'hoat_chat': hoatChatId
+    }).done(function(response) {
+        ctxNT.parentElement.style.display = 'block';
+        document.getElementById('tableNhomThau').innerHTML = cungUngTheoNhom(response.danhsachthau, chartNT);
+        set_hl_dd_dbc(1, 10, hoatChat, response.danhsachthau);
+        sortTable(document.getElementById('tableNhomThau').parentElement, chartNT);
+    }).fail(function() {
+        alert('Lỗi: Không thể kết nối với máy chủ. Vui lòng thử lại sau.');
+    })
 })
+
+function theo_nhom_duoc_ly() {
+    $.post('/get-nhom-list', {'nhom': 'nhom_duoc_ly'}
+    ).done(function(response) {
+        var nhom_duoc_ly_list = response.nhom_duoc_ly_list;
+        if (nhom_duoc_ly_list) {
+            var slNhomDuocLy = document.getElementById('selectNhomDuocLyCungUng');
+            slNhomDuocLy.innerHTML = setOptions(nhom_duoc_ly_list);
+        }
+    }).fail(function() {
+        alert('Lỗi: Không thể kết nối với máy chủ. Vui lòng thử lại sau.');
+    })
+}
+
+$('#selectNhomDuocLyCungUng').on('change', function () {
+        var nhomDuocLyId = this.value;
+        var nhomDuocLy = this.options[this.selectedIndex].innerText;
+        $.post('/cung-ung-theo-nhom', {'nhom_duoc_ly': nhomDuocLyId
+        }).done(function(response) {
+            ctxNDL.parentElement.style.display = 'block';
+            document.getElementById('tableDuocLy').innerHTML = cungUngTheoNhom(response.danhsachthau, chartNDL);
+            sortTable(document.getElementById('tableDuocLy').parentElement, chartNDL);
+            set_hl_dd_dbc(2, 11, nhomDuocLy, response.danhsachthau);
+        }).fail(function() {
+            alert('Lỗi: Không thể kết nối với máy chủ. Vui lòng thử lại sau.');
+        })
+    })
+
+function theo_nhom_hoa_duoc() {
+    $.post('/get-nhom-list', {'nhom': 'nhom_hoa_duoc'}
+    ).done(function(response) {
+        console.log(response);
+        var nhom_hoa_duoc_list = response.nhom_hoa_duoc_list;
+        if (nhom_hoa_duoc_list) {
+            var slNhomHoaDuoc = document.getElementById('selectNhomHoaDuocCungUng');
+            slNhomHoaDuoc.innerHTML = setOptions(nhom_hoa_duoc_list);
+        }
+    }).fail(function() {
+        alert('Lỗi: Không thể kết nối với máy chủ. Vui lòng thử lại sau.');
+    })
+}
+
+$('#selectNhomHoaDuocCungUng').on('change', function () {
+        var nhomHoaDuocId = this.value;
+        var nhomHoaDuoc = this.options[this.selectedIndex].innerText;
+        $.post('/cung-ung-theo-nhom', {'nhom_hoa_duoc': nhomHoaDuocId
+        }).done(function(response) {
+            ctxNHD.parentElement.style.display = 'block';
+            document.getElementById('tableHoaDuoc').innerHTML = cungUngTheoNhom(response.danhsachthau, chartNHD);
+            sortTable(document.getElementById('tableHoaDuoc').parentElement, chartNHD);
+            set_hl_dd_dbc(3, 12, nhomHoaDuoc, response.danhsachthau);
+        }).fail(function() {
+            alert('Lỗi: Không thể kết nối với máy chủ. Vui lòng thử lại sau.');
+        })
+    })
+
+function su_dung() {
+    var suDung = parseInt(document.getElementById('inputSuDung').value);
+    document.getElementById('tableSuDung').innerHTML = `
+        <div id="load_data_notice" style="display: block; height: 50px">
+            <img src="/static/loading.gif" alt="">
+        </div>
+    `;
+    $.post('/su-dung-con-lai', {'su_dung': suDung
+    }).done(function(response) {
+        var htmlSuDung = '';
+        for (let row of response.danhsachthau) {
+            htmlSuDung += conLaivaSuDung(row);
+        }
+        document.getElementById('tableSuDung').innerHTML = htmlSuDung;
+        sortTable(document.getElementById('tableSuDung').parentElement);
+    }).fail(function() {
+        alert('Lỗi: Không thể kết nối với máy chủ. Vui lòng thử lại sau.');
+    })
+}
+$('#inputSuDung').on('change', su_dung);
+
+function con_lai() {
+    var conLai = parseInt(document.getElementById('inputConLai').value);
+    document.getElementById('tableConLai').innerHTML = `
+        <div id="load_data_notice" style="display: block; height: 50px">
+            <img src="/static/loading.gif" alt="">
+        </div>
+    `;
+    $.post('/su-dung-con-lai', {'con_lai': conLai
+    }).done(function(response) {
+        var htmlConLai = '';
+        for (let row of response.danhsachthau) {
+            htmlConLai += conLaivaSuDung(row);
+        }
+        document.getElementById('tableConLai').innerHTML = htmlConLai;
+        sortTable(document.getElementById('tableConLai').parentElement);
+    }).fail(function() {
+        alert('Lỗi: Không thể kết nối với máy chủ. Vui lòng thử lại sau.');
+    })
+}
+$('#inputConLai').on('change', con_lai);
+
+function ton_le() {
+    var tonLe = parseInt(document.getElementById('inputTonLe').value);
+    document.getElementById('tableTonLe').innerHTML = `
+        <div id="load_data_notice" style="display: block; height: 50px">
+            <img src="/static/loading.gif" alt="">
+        </div>
+    `;
+    $.post('/ton-le', {'ton_le_nho': tonLe
+    }).done(function(response) {
+        var htmlTonLe = '';
+        for (let row of response.danhsachthau) {
+            htmlTonLe += setTonLe(row);
+        }
+        document.getElementById('tableTonLe').innerHTML = htmlTonLe;
+        sortTable(document.getElementById('tableTonLe').parentElement);
+    }).fail(function() {
+        alert('Lỗi: Không thể kết nối với máy chủ. Vui lòng thử lại sau.');
+    })
+}
+$('#inputTonLe').on('change', ton_le)
+
+function ton_le_lon() {
+    var tonLe = parseInt(document.getElementById('inputTonLeLon').value);
+    document.getElementById('tableTonLeLon').innerHTML = `
+        <div id="load_data_notice" style="display: block; height: 50px">
+            <img src="/static/loading.gif" alt="">
+        </div>
+    `;
+    $.post('/ton-le', {'ton_le_lon': tonLe
+    }).done(function(response) {
+        var htmlTonLe = '';
+        for (let row of response.danhsachthau) {
+            htmlTonLe += setTonLe(row);
+        }
+        document.getElementById('tableTonLeLon').innerHTML = htmlTonLe;
+        sortTable(document.getElementById('tableTonLeLon').parentElement);
+    }).fail(function() {
+        alert('Lỗi: Không thể kết nối với máy chủ. Vui lòng thử lại sau.');
+    })
+}
+$('#inputTonLeLon').on('change', ton_le_lon);
+
+function theo_thang() {
+    $.get('/su-dung-theo-thang'
+    ).done(function(response) {
+        console.log(response);
+        updateSuDungTheoThang(response.ketQuaCungUng);
+    }).fail(function() {
+        alert('Lỗi: Không thể kết nối với máy chủ. Vui lòng thử lại sau.');
+    })
+}
 
 function theodoicungung2(btn) {
     btn.classList.remove('btn-success');
     btn.classList.add('btn-secondary');
     $.get('/du-lieu-kho'
     ).done(function (response) {
-        var ketQuaCungUng = response.ketQuaCungUng;
-        if (ketQuaCungUng) {
-            hienThiKetQuaCungUng(ketQuaCungUng);
-            alert('Cập nhật thành công!');
-            btn.classList.add('btn-success');
-            btn.classList.remove('btn-secondary');
-        }
+        alert('Cập nhật thành công!');
+        btn.classList.add('btn-success');
+        btn.classList.remove('btn-secondary');
     }).fail(function() {
         console.log('Lỗi: Không thể kết nối với máy chủ.');
     })
@@ -118,9 +356,14 @@ function theodoicungung(btn) {
         processData: false,
         contentType: false,
         success: function(response) {
+            var flash_messages = response.flash_messages;
+            if (flash_messages) {
+                alert(flash_messages[flash_messages.length - 1].message);
+            }
             var import_history = response.import_history;
             if (import_history) {
                 show_table_history(import_history);
+                alert('Cập nhật thành công!');
             }
 
             var thuoc_not_available = response.thuoc_not_available;
@@ -135,14 +378,8 @@ function theodoicungung(btn) {
                    alertT.innerHTML = html;
                }
             }
-
-            var ketQuaCungUng = response.ketQuaCungUng;
-            if (ketQuaCungUng) {
-                hienThiKetQuaCungUng(ketQuaCungUng);
-                alert('Cập nhật thành công!');
-                btn.classList.add('btn-success');
-                btn.classList.remove('btn-secondary');
-            }
+            btn.classList.add('btn-success');
+            btn.classList.remove('btn-secondary');
         },
         error: function() {
             // Xử lý lỗi
@@ -158,8 +395,8 @@ function show_table_history(import_history_dict) {
             <tr style="display: table-row;">
                 <td>${a}</td>
                 <td>${i.name}</td>
-                <td>${i.month}</td>
-                <td>${i.time}</td>
+                <td>${formatDate(i.month)}</td>
+                <td>${formatDate(i.time)}</td>
                 <td><button type="button" class="btn btn-link btn-sm btn-rounded text-danger" onclick="xoaDuLieuImport(${i.id})">Xoá</button></td>
                 <td style="display: none">${i.id}</td>
             </tr>
@@ -254,6 +491,7 @@ function addCellStyle(params) {
 
 function getColumnDefsTheoThang() {
     return [
+    { headerName: 'Mã thuốc BV', field: 'maThuocBV', filter: true, width: 150, cellClass: 'ag-left-aligned-cell', pinned: 'left'  },
     { headerName: 'Tên thuốc', field: 'tenThuoc', filter: true, minWidth: 200, cellClass: 'ag-left-aligned-cell', pinned: 'left'  },
     { headerName: 'Hoạt chất', field: 'hoatChat', filter: true, minWidth: 200, cellClass: 'ag-left-aligned-cell' },
     { headerName: 'Đợt thầu', field: 'dotThau', filter: true, minWidth: 150, cellClass: 'ag-left-aligned-cell' },
@@ -301,7 +539,6 @@ function updateSuDungTheoThang(ketQuaCungUng) {
     const startYear = '2022';
     const endYear = '2023';
 
-    var danhsachthaulist = ketQuaCungUng['danhsachthaulist'];
     var suDungTheoThang = ketQuaCungUng['suDungTheoThang'];
     var danhsachthuoc = ketQuaCungUng['danhsachthuoc'];
     var months = ['03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '01', '02'];
@@ -331,6 +568,7 @@ function updateSuDungTheoThang(ketQuaCungUng) {
     var rowData = [];
     for (var thuoc of danhsachthuoc) {
         var rowThuoc = {
+            'maThuocBV': thuoc[4],
             'tenThuoc': thuoc[0],
             'hoatChat': thuoc[1],
             'keHoach': thuoc[2],
@@ -340,21 +578,21 @@ function updateSuDungTheoThang(ketQuaCungUng) {
 
         for (var row of suDungTheoThang) {
             if (row !== null) {
-                if (row[2] == thuoc[0]) {
-                    if (row[5] == thuoc[3]) {
-                        var month = row[3].split('-')[1];
-                        if (row[3].startsWith(startYear)) {
+                if (row[0] == thuoc[0]) {
+                    if (row[4] == thuoc[4]) {
+                        var month = row[1].split('-')[1];
+                        if (row[1].startsWith(startYear)) {
                             if (!['01', '02'].includes(month)) {
-                                rowThuoc[month] = parseInt(row[4]);
-                                sum += parseInt(row[4]);
+                                rowThuoc[month] = parseInt(row[2]);
+                                sum += parseInt(row[2]);
                             }
-                        } else if (row[3].startsWith(endYear)) {
+                        } else if (row[1].startsWith(endYear)) {
                             if (!newCols.includes(parseInt(month))) {
                                 newCols.push(parseInt(month));
                             }
                             month = `${month}N`;
-                            rowThuoc[month] = parseInt(row[4]);
-                            sum += parseInt(row[4]);
+                            rowThuoc[month] = parseInt(row[2]);
+                            sum += parseInt(row[2]);
                         }
                     }
                 }
@@ -404,27 +642,28 @@ function updateLimitThang(ketQuaCungUng, monthNum) {
             'hoatChat': thuoc[1],
             'keHoach': thuoc[2],
             'dotThau': thuoc[3],
+            'maThuocBV': thuoc[4],
         };
         var months = ['03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '01', '02'];
         var sum = 0;
         var i = 0;
         for (var row of suDungTheoThang) {
             if (row !== null) {
-                if (row[2] == thuoc[0]) {
-                    if (row[5] == thuoc[3]) {
-                        var month = row[3].split('-')[1];
-                        if (row[3].startsWith(startYear)) {
+                if (row[0] == thuoc[0]) {
+                    if (row[4] == thuoc[4]) {
+                        var month = row[1].split('-')[1];
+                        if (row[1].startsWith(startYear)) {
                             if (!['01', '02'].includes(month)) {
                                 if (months.indexOf(month) < monthNum) {
-                                    rowThuoc[month] = parseInt(row[4]);
-                                    sum += parseInt(row[4]);
+                                    rowThuoc[month] = parseInt(row[2]);
+                                    sum += parseInt(row[2]);
                                 }
                             }
-                        } else if (row[3].startsWith(endYear)) {
+                        } else if (row[1].startsWith(endYear)) {
                             if (['01', '02'].includes(month)) {
                                 if (months.indexOf(month) < monthNum) {
-                                    rowThuoc[month] = parseInt(row[4]);
-                                    sum += parseInt(row[4]);
+                                    rowThuoc[month] = parseInt(row[2]);
+                                    sum += parseInt(row[2]);
                                 }
                             }
                         }
@@ -447,55 +686,49 @@ function updateLimitThang(ketQuaCungUng, monthNum) {
     gridTheoThang.api.setRowData(rowData);
 }
 
-function setOptions(index, danhsachthau) {
+function setOptions(danhsachthau) {
     var list = [];
     var html = '<option value="">Chọn</option>';
 
-    for (let row of danhsachthau) {
-        if (!list.includes(row[index])) {
-            list.push(row[index]);
-            if (index == 9) {
-                html += `<option value="${row[8]}">${row[index]}</option>`;
-            } else {
-                html += `<option value="${row[index]}">${row[index]}</option>`;
-            }
+    for (let r of danhsachthau) {
+        if (!list.includes(r.name)) {
+            list.push(r.name);
+            html += `<option value="${r.id}">${r.name}</option>`;
         }
     }
     return html;
 }
 
-function cungUngTheoNhom(index, value, danhsachthau, chart) {
+function cungUngTheoNhom(danhsachthau, chart) {
     var html = '';
     var labels = [];
     var su_dung = [];
     var con_lai = [];
     var i = 1;
     for (let row of danhsachthau) {
-        if (row[index] == value) {
+        html += `<tr style="display: table-row;">
+            <th>${i}</th>
+            <td>${formatDate(row[0])}</td>
+            <td>${row[13]}</td>
+            <td>${row[9]}</td>
+            <td>${row[10]}</td>
+            <td>${row[15]}</td>
+            <td>${row[16]}</td>
+            <td>${row[17]}</td>
+            <td>${row[1].toLocaleString()}</td>
+            <td>${row[2].toLocaleString()}</td>
+            <td class="specialCol">${(100 * row[2] / row[1]).toFixed(2)}%</td>
+            <td>${row[3].toLocaleString()}</td>
+            <td class="specialCol">${(100 * row[3] / row[1]).toFixed(2)}%</td>
+            <td>${row[6].toLocaleString()}</td>
+            <td>${row[7]}</td>
+        </tr>`;
 
-            html += `<tr style="display: table-row;">
-                <th>${i}</th>
-                <td>${formatDate(row[0])}</td>
-                <td>${row[13]}</td>
-                <td>${row[9]}</td>
-                <td>${row[10]}</td>
-                <td>${row[15]}</td>
-                <td>${row[16]}</td>
-                <td>${row[17]}</td>
-                <td>${row[1].toLocaleString()}</td>
-                <td>${row[2].toLocaleString()}</td>
-                <td class="specialCol">${(100 * row[2] / row[1]).toFixed(2)}%</td>
-                <td>${row[3].toLocaleString()}</td>
-                <td class="specialCol">${(100 * row[3] / row[1]).toFixed(2)}%</td>
-                <td>${row[6].toLocaleString()}</td>
-                <td>${row[7]}</td>
-            </tr>`;
+        i++;
+        labels.push(row[9]);
+        su_dung.push((100 * row[2] / row[1]).toFixed(2));
+        con_lai.push((100 * row[3] / row[1]).toFixed(2));
 
-            i++;
-            labels.push(row[9]);
-            su_dung.push((100 * row[2] / row[1]).toFixed(2));
-            con_lai.push((100 * row[3] / row[1]).toFixed(2));
-        }
     }
     chart.data.labels = labels;
     chart.data.datasets = [
@@ -536,7 +769,7 @@ function conLaivaSuDung(row, i) {
     return html;
 }
 
-function tonLe(row) {
+function setTonLe(row) {
     var html = `<tr style="display: table-row;">
                 <td>${formatDate(row[0])}</td>
                 <td>${row[9]}</td>
@@ -693,18 +926,6 @@ function fileKho(files, output) {
 }
 
 function hienThiKetQuaCungUng(ketQuaCungUng) {
-    updateSuDungTheoThang(ketQuaCungUng);
-    var slThuoc = document.getElementById('selectThuocCungUng');
-    var slHoatChat = document.getElementById('selectHoatChatCungUng');
-    var slNhomDuocLy = document.getElementById('selectNhomDuocLyCungUng');
-    var slNhomHoaDuoc = document.getElementById('selectNhomHoaDuocCungUng');
-
-    var danhsachthau = ketQuaCungUng['danhsachthau'];
-    slThuoc.innerHTML = setOptions(9, danhsachthau);
-    slHoatChat.innerHTML = setOptions(10, danhsachthau);
-    slNhomDuocLy.innerHTML = setOptions(11, danhsachthau);
-    slNhomHoaDuoc.innerHTML = setOptions(12, danhsachthau);
-
     var suDung = parseInt(document.getElementById('inputSuDung').value)/100;
     var conLai = parseInt(document.getElementById('inputConLai').value)/100;
     var tonLeInput = parseInt(document.getElementById('inputTonLe').value)/100;
@@ -722,110 +943,11 @@ function hienThiKetQuaCungUng(ketQuaCungUng) {
     $('#inputTonLeLon').on('change', function () {
         hienThiKetQuaCungUng(ketQuaCungUng);
     })
-
-    var htmlConLai = '';
-    var htmlSuDung = '';
-    var htmlTonLe = '';
-    var htmlTonLeLon = '';
-    var htmlTongHop = '';
-    for (let row of danhsachthau) {
-        if (row[2]/row[1] <= suDung) {
-            htmlSuDung += conLaivaSuDung(row);
-        }
-        if (row[3]/row[1] <= conLai) {
-            htmlConLai += conLaivaSuDung(row);
-        }
-        if (row[5]/row[4] <= tonLeInput) {
-            htmlTonLe += tonLe(row);
-        }
-        if (row[5]/row[4] > tonLeLon) {
-            htmlTonLeLon += tonLe(row);
-        }
-    }
     document.getElementById('tableConLai').innerHTML = htmlConLai;
     document.getElementById('tableSuDung').innerHTML = htmlSuDung;
     document.getElementById('tableTonLe').innerHTML = htmlTonLe;
     document.getElementById('tableTonLeLon').innerHTML = htmlTonLeLon;
 
-    var thongkekho = ketQuaCungUng['thongkekho'];
-    $('#selectThuocCungUng').on('change', function () {
-        console.log('he');
-        var idThuoc = this.value;
-
-        var selectedRow = danhsachthau.find(row => row[8] == idThuoc);
-        if (selectedRow) {
-            document.getElementById('tongKeHoach').innerHTML = selectedRow[1].toLocaleString();
-            var daSuDungPercentage = (selectedRow[2] * 100 / selectedRow[1]).toFixed(2);
-            document.getElementById('daSuDung').innerHTML = `${selectedRow[2].toLocaleString()} (${daSuDungPercentage}%)`;
-            document.getElementById('soLanDuTru').innerHTML = selectedRow[7].toLocaleString();
-        }
-        var labels = [];
-        var ngay_nhap_kho_chan = [];
-        var ton_kho_le = [];
-        var trung_binh_nhap_chan = [];
-        var du_tru_con_lai = [];
-        var html = '';
-        for (let row of thongkekho) {
-            if (row[2] == idThuoc) {
-                html += `<tr style="display: table-row;">
-                    <td>${formatDate(row[1])}</td>
-                    <td>${row[3].toLocaleString()}</td>
-                    <td>${row[4].toLocaleString()}</td>
-                    <td>${row[5].toLocaleString()}</td>
-                    <td>${row[6].toLocaleString()}</td>
-                </tr>`;
-                labels.push(formatDate(row[1]));
-                ngay_nhap_kho_chan.push(parseInt(row[3]));
-                ton_kho_le.push(parseInt(row[4]));
-                trung_binh_nhap_chan.push(parseInt(row[5]));
-                du_tru_con_lai.push(parseInt(row[6]));
-            }
-        }
-        var label_data = ['Nhập kho chẵn', 'Tồn kho lẻ', 'Trung bình nhập chẵn', 'Dự trù còn lại'];
-        var borderColor_data = ['#ff6384', '#36a2eb', '#ffcd56', '#4bc0c0'];
-        var data_list = [ngay_nhap_kho_chan, ton_kho_le, trung_binh_nhap_chan, du_tru_con_lai];
-        chartThuoc.data.labels = labels;
-        chartThuoc.data.datasets = [];
-        for (let i = 0, n = label_data.length; i < n; i++) {
-            chartThuoc.data.datasets.push(
-                {
-                    label: label_data[i],
-                    data: data_list[i],
-                    borderColor: borderColor_data[i],
-                    backgroundColor: borderColor_data[i]
-                }
-            )
-        }
-        chartThuoc.update();
-        document.getElementById('tableThuoc').innerHTML = html;
-        console.log(chartThuoc.data);
-        console.log('herre');
-    })
-    $('#selectHoatChatCungUng').on('change', function () {
-        var hoatChat = this.value;
-        ctxNT.parentElement.style.display = 'block';
-        document.getElementById('tableNhomThau').innerHTML = cungUngTheoNhom(10, hoatChat, danhsachthau, chartNT);
-        set_hl_dd_dbc(1, 10, hoatChat, danhsachthau);
-    })
-
-    $('#selectNhomDuocLyCungUng').on('change', function () {
-        var nhomDuocLy = this.value;
-        ctxNDL.parentElement.style.display = 'block';
-        document.getElementById('tableDuocLy').innerHTML = cungUngTheoNhom(11, nhomDuocLy, danhsachthau, chartNDL);
-        set_hl_dd_dbc(2, 11, nhomDuocLy, danhsachthau);
-    })
-
-    $('#selectNhomHoaDuocCungUng').on('change', function () {
-        var nhomHoaDuoc = this.value;
-        ctxNHD.parentElement.style.display = 'block';
-        document.getElementById('tableHoaDuoc').innerHTML = cungUngTheoNhom(12, nhomHoaDuoc, danhsachthau, chartNHD);
-        set_hl_dd_dbc(3, 12, nhomHoaDuoc, danhsachthau);
-    })
-
-
-    sortTable(document.getElementById('tableNhomThau').parentElement, chartNT);
-    sortTable(document.getElementById('tableDuocLy').parentElement, chartNDL);
-    sortTable(document.getElementById('tableHoaDuoc').parentElement, chartNHD);
     sortTable(document.getElementById('tableConLai').parentElement);
     sortTable(document.getElementById('tableSuDung').parentElement);
     sortTable(document.getElementById('tableTonLe').parentElement);
@@ -881,8 +1003,6 @@ function select(i) {
     chart.update();
 }
 
-
-
 function set_hl_dd_dbc(i, index, value, danhsachthau) {
     var htmlHL = '<option value=""></option>', htmlDD = '<option value=""></option>', htmlDBC = '<option value=""></option>';
     var HLlist = [], DDlist = [], DBClist = [];
@@ -902,6 +1022,7 @@ function set_hl_dd_dbc(i, index, value, danhsachthau) {
             }
         }
     }
+    console.log(htmlHL);
     $(`#ham_luong${i}`)[0].innerHTML = htmlHL;
     $(`#duong_dung${i}`)[0].innerHTML = htmlDD;
     $(`#dang_bao_che${i}`)[0].innerHTML = htmlDBC;

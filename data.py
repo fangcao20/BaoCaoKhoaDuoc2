@@ -196,17 +196,39 @@ with app.app_context():
     # db.session.commit()
 
     #
-    results = Thuoc.query.all()
-    list_name = []
-    list_thuoc = []
-    for t in results:
-        name = t.name
-        if name not in list_name:
-            list_name.append(name)
-            list_thuoc.append(t)
-        else:
-            index = list_name.index(name)
-            thuoc = list_thuoc[index]
-            t.code = thuoc.code
+    # results = Thuoc.query.all()
+    # list_name = []
+    # list_thuoc = []
+    # for t in results:
+    #     name = t.name
+    #     if name not in list_name:
+    #         list_name.append(name)
+    #         list_thuoc.append(t)
+    #     else:
+    #         index = list_name.index(name)
+    #         thuoc = list_thuoc[index]
+    #         t.code = thuoc.code
+    # db.session.commit()
+
+    df = pd.read_excel("C:/Users/phuon/OneDrive/Desktop/Book1.xlsx")
+    for i in range(0, df.shape[0]):
+        row = df.iloc[i].tolist()
+        hoat_chat_id = row[0]
+        stt_tt20 = int(row[1])
+        ndl = int(row[2])
+
+        hc = HoatChat.query.get(int(hoat_chat_id))
+        tt20 = ThongTu20.query.filter_by(stt=stt_tt20).first()
+        hc_tt20_id = tt20.hoat_chat_tt20_id
+        nhd_id = tt20.nhom_hoa_duoc_id
+
+        nhomhoaduoc = NhomHoaDuoc.query.get(nhd_id)
+        nhd_name = nhomhoaduoc.name
+        nhd_bv = NhomHoaDuocBV.query.filter_by(name=nhd_name, hospital_id=1).first()
+        if hc:
+            hc.hoat_chat_tt20_id = hc_tt20_id
+            hc.nhom_duoc_ly_bv_id = ndl
+            hc.nhom_hoa_duoc_bv_id = nhd_bv.id
     db.session.commit()
+
 

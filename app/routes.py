@@ -12,7 +12,7 @@ from app.forms import LoginForms, ChangePasswordForm, ResetPasswordRequestForm, 
 from app.models import User, AccessControl, DotThau, ImportHistory, Thuoc, HoatChat, HamLuong, DuongDung, DangBaoChe, \
     QuyCachDongGoi, DonViTinh, CoSoSanXuat, NuocSanXuat, NhaThau, NhomThau, KetQuaTrungThau, NhomDuocLy, NhomHoaDuoc, \
     FileInformation, KhoChan, KhoLe, ThongKeKho, TongHopThau, HoatChatSYT, HoatChatTT20, NhomDuocLyBV, \
-    NhomHoaDuocBV, ImportHistoryNXT, NXT, SuDungThuocABCVEN, ThongTu20
+    NhomHoaDuocBV, ImportHistoryNXT, NXT, SuDungThuocABCVEN, ThongTu20, SuDungTheoThang
 
 
 @app.route('/dang-nhap', methods=['GET', 'POST'])
@@ -625,7 +625,229 @@ def theo_doi_cung_ung(url):
     return render_template('theo_doi_cung_ung.html', user=current_user, import_history=import_history)
 
 
+@app.route('/get-thuoc-list', methods=['POST'])
+@login_required
+def get_thuoc_list():
+    startLetter = request.form['startLetter'].upper()
+    thuoc = db.session.query(func.distinct(Thuoc.code)).select_from(TongHopThau). \
+        join(Thuoc, Thuoc.id == TongHopThau.thuoc_id). \
+        filter(
+        Thuoc.hospital_id == current_user.hospital.id,
+        func.lower(Thuoc.name).like(func.lower(f'{startLetter}%'))
+    ).all()
+    thuoc_list = []
+    for c in thuoc:
+        t = Thuoc.query.filter(Thuoc.code == c[0], Thuoc.hospital_id == current_user.hospital.id).first()
+        thuoc_list.append(t.danh_muc_to_dict())
+    return jsonify(thuoc_list=thuoc_list)
+
+
+@app.route('/cung-ung-theo-thuoc', methods=['POST'])
+@login_required
+def cung_ung_theo_thuoc():
+    code = request.form['code']
+    tht = db.session.query(func.sum(TongHopThau.tong_ke_hoach), func.sum(TongHopThau.tong_su_dung),
+                           func.sum(TongHopThau.so_lan_du_tru)). \
+        join(Thuoc, Thuoc.id == TongHopThau.thuoc_id). \
+        join(KetQuaTrungThau, KetQuaTrungThau.thuoc_id == TongHopThau.thuoc_id). \
+        join(DotThau, DotThau.id == KetQuaTrungThau.dot_thau_id). \
+        filter(TongHopThau.hospital_id == current_user.hospital.id,
+               Thuoc.code == code,
+               DotThau.end.is_(None)). \
+        group_by(Thuoc.code).first()
+    total = {
+        'tong_ke_hoach': tht[0],
+        'tong_su_dung': tht[1],
+        'so_lan_du_tru': tht[2],
+    }
+    if not tht:
+        tht = (0, 0, 0.0)
+    tkh = ThongKeKho.query.join(Thuoc, Thuoc.id == ThongKeKho.thuoc_id). \
+        filter(ThongKeKho.hospital_id == current_user.hospital.id,
+               Thuoc.code == code). \
+        order_by(ThongKeKho.ngay_nhap_chan.asc()).all()
+    thongkekho = [t.to_dict() for t in tkh]
+    return jsonify(total=total, thongkekho=thongkekho)
+
+
+@app.route('/get-nhom-list', methods=['POST'])
+@login_required
+def get_nhom_list():
+    if request.form['nhom'] == 'nhom_thau':
+        tht = db.session.query(func.distinct(HoatChat.id), HoatChat.name).select_from(TongHopThau). \
+            join(Thuoc, Thuoc.id == TongHopThau.thuoc_id). \
+            join(KetQuaTrungThau, KetQuaTrungThau.thuoc_id == Thuoc.id). \
+            join(HoatChat, HoatChat.id == KetQuaTrungThau.hoat_chat_id). \
+            join(DotThau, DotThau.id == KetQuaTrungThau.dot_thau_id). \
+            filter(TongHopThau.hospital_id == current_user.hospital.id, DotThau.end.is_(None)). \
+            order_by(HoatChat.name).all()
+        hoat_chat_list = []
+        for hc in tht:
+            hoat_chat_list.append({'id': hc[0], 'name': hc[1]})
+        return jsonify(hoat_chat_list=hoat_chat_list)
+    elif request.form['nhom'] == 'nhom_duoc_ly':
+        tht = db.session.query(func.distinct(NhomDuocLyBV.id), NhomDuocLyBV.name).select_from(TongHopThau). \
+            join(Thuoc, Thuoc.id == TongHopThau.thuoc_id). \
+            join(KetQuaTrungThau, KetQuaTrungThau.thuoc_id == Thuoc.id). \
+            join(HoatChat, HoatChat.id == KetQuaTrungThau.hoat_chat_id). \
+            join(NhomDuocLyBV, NhomDuocLyBV.id == HoatChat.nhom_duoc_ly_bv_id). \
+            join(DotThau, DotThau.id == KetQuaTrungThau.dot_thau_id). \
+            filter(TongHopThau.hospital_id == current_user.hospital.id, DotThau.end.is_(None)). \
+            order_by(NhomDuocLyBV.name).all()
+        nhom_duoc_ly_list = []
+        for hc in tht:
+            nhom_duoc_ly_list.append({'id': hc[0], 'name': hc[1]})
+        return jsonify(nhom_duoc_ly_list=nhom_duoc_ly_list)
+    else:
+        tht = db.session.query(func.distinct(NhomHoaDuocBV.id), NhomHoaDuocBV.name).select_from(TongHopThau). \
+            join(Thuoc, Thuoc.id == TongHopThau.thuoc_id). \
+            join(KetQuaTrungThau, KetQuaTrungThau.thuoc_id == Thuoc.id). \
+            join(HoatChat, HoatChat.id == KetQuaTrungThau.hoat_chat_id). \
+            join(NhomHoaDuocBV, NhomHoaDuocBV.id == HoatChat.nhom_hoa_duoc_bv_id). \
+            join(DotThau, DotThau.id == KetQuaTrungThau.dot_thau_id). \
+            filter(TongHopThau.hospital_id == current_user.hospital.id, DotThau.end.is_(None)). \
+            order_by(NhomHoaDuocBV.name).all()
+        nhom_hoa_duoc_list = []
+        for hc in tht:
+            nhom_hoa_duoc_list.append({'id': hc[0], 'name': hc[1]})
+        return jsonify(nhom_hoa_duoc_list=nhom_hoa_duoc_list)
+
+
+@app.route('/cung-ung-theo-nhom', methods=['POST'])
+@login_required
+def cung_ung_theo_nhom():
+    if 'hoat_chat' in request.form:
+        hoat_chat_id = int(request.form['hoat_chat'])
+        tht = TongHopThau.query. \
+            join(Thuoc, Thuoc.id == TongHopThau.thuoc_id). \
+            join(KetQuaTrungThau, KetQuaTrungThau.thuoc_id == Thuoc.id). \
+            join(HoatChat, HoatChat.id == KetQuaTrungThau.hoat_chat_id). \
+            join(DotThau, DotThau.id == KetQuaTrungThau.dot_thau_id). \
+            filter(TongHopThau.hospital_id == current_user.hospital.id,
+                   HoatChat.id == hoat_chat_id, DotThau.end.is_(None)).all()
+        danhsachthau = [t.to_dict() for t in tht]
+        return jsonify(danhsachthau=danhsachthau)
+    elif 'nhom_duoc_ly' in request.form:
+        nhom_duoc_ly_id = int(request.form['nhom_duoc_ly'])
+        tht = TongHopThau.query. \
+            join(Thuoc, Thuoc.id == TongHopThau.thuoc_id). \
+            join(KetQuaTrungThau, KetQuaTrungThau.thuoc_id == Thuoc.id). \
+            join(HoatChat, HoatChat.id == KetQuaTrungThau.hoat_chat_id). \
+            join(DotThau, DotThau.id == KetQuaTrungThau.dot_thau_id). \
+            filter(TongHopThau.hospital_id == current_user.hospital.id,
+                   HoatChat.nhom_duoc_ly_bv_id == nhom_duoc_ly_id, DotThau.end.is_(None)).all()
+        danhsachthau = [t.to_dict() for t in tht]
+        return jsonify(danhsachthau=danhsachthau)
+    else:
+        nhom_hoa_duoc_id = int(request.form['nhom_hoa_duoc'])
+        tht = TongHopThau.query. \
+            join(Thuoc, Thuoc.id == TongHopThau.thuoc_id). \
+            join(KetQuaTrungThau, KetQuaTrungThau.thuoc_id == Thuoc.id). \
+            join(HoatChat, HoatChat.id == KetQuaTrungThau.hoat_chat_id). \
+            join(DotThau, DotThau.id == KetQuaTrungThau.dot_thau_id). \
+            filter(TongHopThau.hospital_id == current_user.hospital.id,
+                   HoatChat.nhom_hoa_duoc_bv_id == nhom_hoa_duoc_id, DotThau.end.is_(None)).all()
+        danhsachthau = [t.to_dict() for t in tht]
+        return jsonify(danhsachthau=danhsachthau)
+
+
+@app.route('/su-dung-con-lai', methods=['POST'])
+@login_required
+def su_dung_con_lai():
+    if 'su_dung' in request.form:
+        su_dung = float(request.form['su_dung']) / 100
+        tht = TongHopThau.query. \
+            join(Thuoc, Thuoc.id == TongHopThau.thuoc_id). \
+            join(KetQuaTrungThau, KetQuaTrungThau.thuoc_id == Thuoc.id). \
+            join(DotThau, DotThau.id == KetQuaTrungThau.dot_thau_id). \
+            filter(TongHopThau.tong_su_dung / TongHopThau.tong_ke_hoach < su_dung,
+                   TongHopThau.hospital_id == current_user.hospital.id,
+                   DotThau.end.is_(None)).paginate(page=1, per_page=20, error_out=False)
+        danhsachthau = []
+        if tht:
+            danhsachthau = [t.to_dict() for t in tht]
+        return jsonify(danhsachthau=danhsachthau)
+    else:
+        con_lai = float(request.form['con_lai']) / 100
+        tht = TongHopThau.query. \
+            join(Thuoc, Thuoc.id == TongHopThau.thuoc_id). \
+            join(KetQuaTrungThau, KetQuaTrungThau.thuoc_id == Thuoc.id). \
+            join(DotThau, DotThau.id == KetQuaTrungThau.dot_thau_id). \
+            filter(TongHopThau.con_lai / TongHopThau.tong_ke_hoach < con_lai,
+                   TongHopThau.hospital_id == current_user.hospital.id,
+                   DotThau.end.is_(None)).paginate(page=1, per_page=20, error_out=False)
+        danhsachthau = []
+        if tht:
+            danhsachthau = [t.to_dict() for t in tht]
+        return jsonify(danhsachthau=danhsachthau)
+
+
+@app.route('/ton-le', methods=['POST'])
+@login_required
+def ton_le():
+    if 'ton_le_nho' in request.form:
+        ton_le_nho = float(request.form['ton_le_nho']) / 100
+        tht = TongHopThau.query. \
+            join(Thuoc, Thuoc.id == TongHopThau.thuoc_id). \
+            join(KetQuaTrungThau, KetQuaTrungThau.thuoc_id == Thuoc.id). \
+            join(DotThau, DotThau.id == KetQuaTrungThau.dot_thau_id). \
+            filter(TongHopThau.ton_le_moi_nhat / TongHopThau.nhap_le_moi_nhat < ton_le_nho,
+                   TongHopThau.hospital_id == current_user.hospital.id,
+                   DotThau.end.is_(None)).paginate(page=1, per_page=20, error_out=False)
+        danhsachthau = []
+        if tht:
+            danhsachthau = [t.to_dict() for t in tht]
+        return jsonify(danhsachthau=danhsachthau)
+    else:
+        ton_le_lon = float(request.form['ton_le_lon']) / 100
+        tht = TongHopThau.query. \
+            join(Thuoc, Thuoc.id == TongHopThau.thuoc_id). \
+            join(KetQuaTrungThau, KetQuaTrungThau.thuoc_id == Thuoc.id). \
+            join(DotThau, DotThau.id == KetQuaTrungThau.dot_thau_id). \
+            filter(TongHopThau.ton_le_moi_nhat / TongHopThau.nhap_le_moi_nhat > ton_le_lon,
+                   TongHopThau.hospital_id == current_user.hospital.id,
+                   DotThau.end.is_(None)).all()
+        danhsachthau = []
+        if tht:
+            danhsachthau = [t.to_dict() for t in tht]
+        return jsonify(danhsachthau=danhsachthau)
+
+
+@app.route('/su-dung-theo-thang', methods=['GET'])
+@login_required
+def su_dung_theo_thang():
+    suDungTheoThang = []
+    danhsachthuoc = []
+    results = db.session.query(Thuoc.name, ThongKeKho.ngay_nhap_chan, ThongKeKho.nhap_chan, DotThau.code, Thuoc.codeBV). \
+        select_from(ThongKeKho). \
+        join(Thuoc, Thuoc.id == ThongKeKho.thuoc_id). \
+        join(KetQuaTrungThau, KetQuaTrungThau.thuoc_id == ThongKeKho.thuoc_id). \
+        join(DotThau, DotThau.id == KetQuaTrungThau.dot_thau_id). \
+        filter(ThongKeKho.hospital_id == current_user.hospital.id,
+               DotThau.end.is_(None)). \
+        order_by(ThongKeKho.ngay_nhap_chan.asc()).all()
+    for r in results:
+        row = [r[0], r[1].strftime("%Y-%m-%d"), r[2], r[3], r[4]]
+        suDungTheoThang.append(row)
+
+    tht = db.session.query(Thuoc.name, HoatChat.name, TongHopThau.tong_ke_hoach, DotThau.code, Thuoc.codeBV) \
+        .select_from(TongHopThau). \
+        join(Thuoc, Thuoc.id == TongHopThau.thuoc_id). \
+        join(KetQuaTrungThau, KetQuaTrungThau.thuoc_id == TongHopThau.thuoc_id). \
+        join(HoatChat, HoatChat.id == KetQuaTrungThau.hoat_chat_id). \
+        join(DotThau, DotThau.id == KetQuaTrungThau.dot_thau_id). \
+        filter(TongHopThau.hospital_id == current_user.hospital.id,
+               DotThau.end.is_(None)). \
+        order_by(Thuoc.name).all()
+    for t in tht:
+        row = [x for x in t]
+        danhsachthuoc.append(row)
+    ketQuaCungUng = {'danhsachthuoc': danhsachthuoc, 'suDungTheoThang': suDungTheoThang}
+    return jsonify(ketQuaCungUng=ketQuaCungUng)
+
+
 @app.route('/ket-qua-cung-ung', methods=['GET'])
+@login_required
 def final_ket_qua_cung_ung():
     ketQuaCungUng = ket_qua_cung_ung('NXT')
     return jsonify(ketQuaCungUng=ketQuaCungUng)
@@ -701,7 +923,6 @@ def file_cung_ung():
                                                        KetQuaTrungThau.thuoc_id == t.thuoc_id).first()
         tongKeHoach = ketQuaTrungThau.so_luong
         ngayThau = ketQuaTrungThau.dot_thau.ngayQD
-        ngayHH = ketQuaTrungThau.dot_thau.ngayHH
 
         # Thong ke kho
         duTruConLai = tongKeHoach
@@ -758,8 +979,7 @@ def file_cung_ung():
     import_history = []
     for i in ih:
         import_history.append(i.import_history_to_dict())
-    ketQuaCungUng = ket_qua_cung_ung('NXT')
-    return jsonify(import_history=import_history, thuoc_not_available=thuoc_not_available, ketQuaCungUng=ketQuaCungUng)
+    return jsonify(import_history=import_history, thuoc_not_available=thuoc_not_available)
 
 
 def ket_qua_cung_ung(data):
@@ -1030,11 +1250,14 @@ def nhap_du_lieu_abc_ven():
         elif 'available_2_time[date_from1]' in request.form:
             date_from1 = request.form.get('available_2_time[date_from1]')
             date_to1 = request.form.get('available_2_time[date_to1]')
+            print(date_from1, date_to1)
             tong_hop_abc_ven_du_lieu_co_san(date_from=date_from1, date_to=date_to1, period=1)
             date_from2 = request.form.get('available_2_time[date_from2]')
             date_to2 = request.form.get('available_2_time[date_to2]')
+            print(date_from2, date_to2)
             tong_hop_abc_ven_du_lieu_co_san(date_from=date_from2, date_to=date_to2, period=2)
         elif 'file' in request.files:
+            print('here');
             file = request.files.get('file')
             tong_hop_abc_ven_file(file, 1)
         elif 'file1' in request.files:
@@ -1109,7 +1332,7 @@ def tong_hop_abc_ven_du_lieu_co_san(**kwargs):
 
 
 def tong_hop_abc_ven_file(file, period):
-    df = pd.read_excel(file)
+    df = pd.read_excel(file, engine='openpyxl')
     df = df.where(pd.notna(df), None)
 
     tong_tien = df['Thành tiền'].sum()
@@ -1473,6 +1696,42 @@ def xay_dung_danh_muc(url):
     return render_template('xay_dung_danh_muc.html', user=current_user)
 
 
+@app.route('/date-xay-dung-danh-muc', methods=['POST'])
+@login_required
+def date_xddm():
+    date_from = datetime.strptime(request.form['date_from'], "%Y-%m-%d")
+    date_to = datetime.strptime(request.form['date_to'], "%Y-%m-%d")
+
+    results = KetQuaTrungThau.query. \
+        join(DotThau, DotThau.id == KetQuaTrungThau.dot_thau_id). \
+        filter(KetQuaTrungThau.hospital_id == current_user.hospital.id,
+               DotThau.end.is_(None),
+               DotThau.ngayQD >= date_from,
+               DotThau.ngayQD <= date_to).all()
+
+    bao_cao_dict = []
+    hoatchatlist = []
+    for r in results:
+        ven = r.thuoc.ven
+        t = SuDungThuocABCVEN.query.filter(SuDungThuocABCVEN.thuoc == r.thuoc.name,
+                                           SuDungThuocABCVEN.hospital_id == current_user.hospital.id).first()
+        abc = t.nhom_abc if t else ''
+
+        bao_cao_dict.append(
+            [r.dot_thau.code, r.dot_thau.ngayQD.strftime("%Y-%m-%d"), r.thuoc.name, r.hoat_chat.name, r.ham_luong.name,
+             r.thuoc.sdk, r.duong_dung.name, r.dang_bao_che.name,
+             r.quy_cach_dong_goi.name,
+             r.don_vi_tinh.name, r.co_so_san_xuat.name, r.nuoc_san_xuat.place,
+             r.nha_thau.name, r.nhom_thau.name,
+             r.so_luong, r.don_gia, r.thanh_tien,
+             r.hoat_chat.nhom_duoc_ly_bv.name if r.hoat_chat.nhom_duoc_ly_bv else '',
+             r.hoat_chat.nhom_hoa_duoc_bv.name if r.hoat_chat.nhom_duoc_ly_bv else '',
+             abc, ven])
+        hoatchatlist.append(r.hoat_chat.name)
+    ketQuaXDDM = {'danhmuc': bao_cao_dict, 'hoatchatlist': sorted(set(hoatchatlist))}
+    return jsonify(ketQuaXDDM=ketQuaXDDM)
+
+
 @app.route('/xay-dung-danh-muc-data', methods=['GET'])
 def xay_dung_danh_muc_data():
     results = KetQuaTrungThau.query.filter_by(hospital=current_user.hospital).all()
@@ -1484,7 +1743,7 @@ def xay_dung_danh_muc_data():
         abc = t.nhom_abc if t else ''
 
         bao_cao_dict.append(
-            [r.dot_thau.code, r.thuoc.name, r.hoat_chat.name, r.ham_luong.name,
+            [r.dot_thau.code, r.dot_thau.ngayQD.strftime("%Y-%m-%d"), r.thuoc.name, r.hoat_chat.name, r.ham_luong.name,
              r.thuoc.sdk, r.duong_dung.name, r.dang_bao_che.name,
              r.quy_cach_dong_goi.name,
              r.don_vi_tinh.name, r.co_so_san_xuat.name, r.nuoc_san_xuat.place,

@@ -147,7 +147,7 @@
                         >
                           <div class="accordion-body">
                             <p>Từ <input type="date" id="a1tfrom"> Đến <input type="date" id="a1tto"></p>
-                              <button type="button" class="btn btn-sm btn-success mt-2" style="width: 100px" onclick="available_1_time()">Cập nhật</button>
+                              <button type="button" class="btn btn-sm btn-success mt-2" style="width: 100px" onclick="available_1_time(this)">Cập nhật</button>
                           </div>
                         </div>
                       </div>
@@ -181,7 +181,7 @@
                                    <p> Từ <input type="date" id="a2tfrom2"> Đến <input type="date" id="a2tto2"></p>
                                 </div>
                             </div>
-                              <button type="button" class="btn btn-sm btn-success mt-4" style="width: 100px" onclick="available_2_time()">Cập nhật</button>
+                              <button type="button" class="btn btn-sm btn-success mt-4" style="width: 100px" onclick="available_2_time(this)">Cập nhật</button>
                           </div>
                         </div>
                       </div>
@@ -228,9 +228,7 @@
                                   *Tải file mẫu
                                   <a class="fw-bold" href="https://drive.usercontent.google.com/download?id=17fz03ngT_tbPrJ-FDihW6wc3SZ04vnWR&export=download&authuser=0&confirm=t&uuid=3660b54f-684b-4222-9728-808ff1324e21&at=APZUnTXVgt4AcdNknA0yjfpJ3BgU:1698987536645">Phân tích ABCVEN</a>
                               </div>
-                              <button type="button" class="btn btn-sm btn-success mt-3" style="width: 100px" onclick="import_1_time()">Cập nhật</button>
-                              <div class="loading">
-                              </div>
+                              <button type="button" class="btn btn-sm btn-success mt-3" style="width: 100px" onclick="import_1_time(this)">Cập nhật</button>
                           </div>
                         </div>
                       </div>
@@ -276,9 +274,7 @@
                                   </div>
                               </div>
                             </div>
-                              <button type="button" class="btn btn-sm btn-success" style="width: 100px" onclick="import_2_time()">Cập nhật</button>
-                              <div class="loading">
-                              </div>
+                              <button type="button" class="btn btn-sm btn-success" style="width: 100px" onclick="import_2_time(this)">Cập nhật</button>
                           </div>
                         </div>
                       </div>
@@ -294,7 +290,10 @@
         role="tabpanel"
         aria-labelledby="tab-1"
       >
-        <div class="row">
+          <div id="alert-abc">
+              <img src="/static/loading.gif" alt="">Đang tải dữ liệu, vui lòng chờ trong giây lát.
+          </div>
+          <div class="row">
            <div class="col col-xxl-6">
                <h6>Phân tích A/ABC-VEN</h6>
                <table class="table align-middle mb-0 bg-white table-sm table-bordered">

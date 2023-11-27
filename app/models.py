@@ -123,6 +123,7 @@ class Hospital(db.Model):
     abcvens = db.relationship('SuDungThuocABCVEN', cascade="all,delete", backref='hospital', lazy='dynamic')
     nhomduoclys = db.relationship('NhomDuocLyBV', cascade="all,delete", backref='hospital', lazy='dynamic')
     nhomhoaduocs = db.relationship('NhomHoaDuocBV', cascade="all,delete", backref='hospital', lazy='dynamic')
+    sudungtheothang = db.relationship('SuDungTheoThang', cascade="all,delete", backref='hospital', lazy='dynamic')
 
     def __repr__(self):
         return '<Hospital {}>'.format(self.name)
@@ -162,6 +163,7 @@ class DotThau(db.Model):
     importhistory = db.relationship('ImportHistory', cascade="all,delete", backref='dot_thau', lazy='dynamic')
     nxts = db.relationship('NXT', cascade="all,delete", backref='dot_thau', lazy='dynamic')
     khochans = db.relationship('KhoChan', cascade="all,delete", backref='dot_thau', lazy='dynamic')
+    sudungtheothang = db.relationship('SuDungTheoThang', cascade="all,delete", backref='dot_thau', lazy='dynamic')
 
     def __repr__(self):
         return '<DotThau {}>'.format(self.name)
@@ -203,6 +205,7 @@ class Thuoc(db.Model):
     tonghopthaus = db.relationship('TongHopThau', cascade="all,delete", backref='thuoc', lazy='dynamic')
     thongkekhos = db.relationship('ThongKeKho', cascade="all,delete", backref='thuoc', lazy='dynamic')
     nxts = db.relationship('NXT', cascade="all,delete", backref='thuoc', lazy='dynamic')
+    sudungtheothang = db.relationship('SuDungTheoThang', cascade="all,delete", backref='thuoc', lazy='dynamic')
 
     def __repr__(self):
         return '<Thuoc {}>'.format(self.name)
@@ -687,3 +690,17 @@ class SuDungThuocABCVEN(db.Model):
 
     def __repr__(self):
         return '<SuDungThuocABCVEN {}>'.format(self.thuoc)
+
+
+class SuDungTheoThang(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    thuoc_id = db.Column(db.Integer, db.ForeignKey('thuoc.id'))
+    month = db.Column(db.Date, index=True)
+    nhap = db.Column(db.Integer)
+    dot_thau_id = db.Column(db.Integer,
+                            db.ForeignKey('dot_thau.id', ondelete='CASCADE', onupdate='CASCADE'))
+    hospital_id = db.Column(db.Integer, db.ForeignKey('hospital.id', ondelete='CASCADE', onupdate='CASCADE'),
+                            nullable=False)
+
+    def __repr__(self):
+        return '<SuDungTheoThang {}>'.format(self.thuoc_id)

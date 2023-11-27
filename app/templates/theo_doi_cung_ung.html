@@ -1,9 +1,6 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div id="load_data_notice" style="display: block; height: 50px">
-    <img src="/static/loading.gif" alt="">Đang tải dữ liệu. Vui lòng đợi trong giây lát!
-</div>
 <div class="row w-100" id="content">
   <div class="col-2">
     <!-- Tab navs -->
@@ -41,6 +38,7 @@
         role="tab"
         aria-controls="nhom_thau_c"
         aria-selected="false"
+        onclick="theo_nhom_thau()"
         >2. Theo Nhóm Thầu</a
       >
       <a
@@ -51,6 +49,7 @@
         role="tab"
         aria-controls="nhom_duoc_ly_c"
         aria-selected="false"
+        onclick="theo_nhom_duoc_ly()"
         >3. Theo Nhóm Dược Lý</a
       >
       <a
@@ -61,6 +60,7 @@
         role="tab"
         aria-controls="nhom_hoa_duoc_c"
         aria-selected="false"
+        onclick="theo_nhom_hoa_duoc()"
         >4. Theo Nhóm Hoá Dược</a
       >
       <a
@@ -71,6 +71,7 @@
         role="tab"
         aria-controls="su_dung_c"
         aria-selected="false"
+        onclick="su_dung()"
         >5. Sử dụng/Kế hoạch</a
       >
       <a
@@ -81,6 +82,7 @@
         role="tab"
         aria-controls="con_lai_c"
         aria-selected="false"
+        onclick="con_lai()"
         >6. Còn lại/Kế hoạch</a
       >
       <a
@@ -91,6 +93,7 @@
         role="tab"
         aria-controls="ton_nho_c"
         aria-selected="false"
+        onclick="ton_le()"
         >7. Tồn lẻ < 10%</a
       >
       <a
@@ -101,6 +104,7 @@
         role="tab"
         aria-controls="ton_lon_c"
         aria-selected="false"
+        onclick="ton_le_lon()"
         >8. Tồn lẻ > 10%</a
       >
       <a
@@ -111,6 +115,7 @@
         role="tab"
         aria-controls="thang_c"
         aria-selected="false"
+        onclick="theo_thang()"
         >9. Theo Tháng</a
       >
     </div>
@@ -227,9 +232,11 @@
         aria-labelledby="thuoc"
       >
         <div class="row">
-            <div class="col-2"><h6>Thuốc: </h6></div>
-            <div class="col-10">
-                <select style="width: 100%" class="form-select select2" name="" id="selectThuocCungUng"></select>
+            <div class="col-1"><h6>Thuốc: </h6></div>
+            <div class="col-11">
+<!--                <select style="width: 100%" class="form-select select2" name="" id="selectThuocCungUng"></select>-->
+                <input type="text" class="form-control" list="datalist_thuoc" onkeyup="get_thuoc_list(this)" placeholder="Nhập tên thuốc...">
+                <datalist id="datalist_thuoc"></datalist>
             </div>
         </div>
         <div class="row mt-3" style="margin-left: 20px">
@@ -240,7 +247,7 @@
             </ul>
         </div>
         <div class="row">
-            <div style="max-height: 450px; overflow: auto">
+            <div class="table-cung-ung">
                 <table class="table align-middle mb-0 bg-white table-sm table-hover table-bordered">
                     <thead class="bg-light">
                         <tr>
@@ -282,7 +289,7 @@
             <div class="col-2"><select class="form-select select2" id="dang_bao_che1" onchange="select(1)"></select></div>
         </div>
         <div class="row mt-3">
-            <div style="max-height: 450px; overflow: auto">
+            <div class="table-cung-ung">
                 <table class="table align-middle mb-0 bg-white table-sm table-hover table-bordered">
                     <thead class="bg-light">
                         <tr>
@@ -334,7 +341,7 @@
             <div class="col-2"><select class="form-select select2" id="dang_bao_che2" onchange="select(2)"></select></div>
         </div>
           <div class="row mt-3">
-              <div style="max-height: 450px; overflow: auto">
+              <div class="table-cung-ung">
                   <table class="table align-middle mb-0 bg-white table-sm table-hover table-bordered">
                       <thead class="bg-light">
                           <tr>
@@ -386,7 +393,7 @@
             <div class="col-2"><select class="form-select select2" id="dang_bao_che3" onchange="select(3)"></select></div>
         </div>
         <div class="row mt-3">
-            <div style="max-height: 450px; overflow: auto">
+            <div class="table-cung-ung">
                 <table class="table align-middle mb-0 bg-white table-sm table-hover table-bordered">
                     <thead class="bg-light">
                         <tr>
@@ -426,7 +433,7 @@
         <ul>
             <li><h6>Sử dụng/Kế hoạch < <input id="inputSuDung" type="number" placeholder="10" value="10"> %</h6></li>
         </ul>
-        <div style="max-height: 450px; overflow: auto">
+        <div class="table-cung-ung">
             <table class="table align-middle mb-0 bg-white table-sm table-hover table-bordered">
                 <thead class="bg-light">
                     <tr>
@@ -459,7 +466,7 @@
         <ul>
               <li><h6>Còn lại/Kế hoạch < <input id="inputConLai" type="number" placeholder="10" value="10"> %</h6></li>
           </ul>
-          <div style="max-height: 450px; overflow: auto">
+          <div class="table-cung-ung">
               <table class="table align-middle mb-0 bg-white table-sm table-hover table-bordered">
                   <thead class="bg-light">
                       <tr>
@@ -492,7 +499,7 @@
         <ul>
               <li><h6>Tồn lẻ < <input id="inputTonLe" type="number" placeholder="10" value="10"> %</h6></li>
           </ul>
-          <div style="max-height: 450px; overflow: auto">
+          <div class="table-cung-ung">
               <table class="table align-middle mb-0 bg-white table-sm table-hover table-bordered">
                   <thead class="bg-light">
                       <tr>
@@ -524,7 +531,7 @@
         <ul>
             <li><h6> Tồn lẻ > <input id="inputTonLeLon" type="number" placeholder="10" value="10"> %</h6></li>
         </ul>
-        <div style="max-height: 450px; overflow: auto">
+        <div class="table-cung-ung">
             <table class="table align-middle mb-0 bg-white table-sm table-hover table-bordered">
                 <thead class="bg-light">
                     <tr>
