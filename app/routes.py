@@ -670,6 +670,14 @@ def cung_ung_theo_thuoc():
     return jsonify(total=total, thongkekho=thongkekho)
 
 
+@app.route('/get-nhom-theo-hoat-chat', methods=['POST'])
+@login_required
+def get_nhom_theo_hoat_chat():
+    hoat_chat_id = request.form['hoat_chat_id']
+    hc = HoatChat.query.get(int(hoat_chat_id))
+    return jsonify(nhom_duoc_ly=str(hc.nhom_duoc_ly_bv.id), nhom_hoa_duoc=str(hc.nhom_hoa_duoc_bv.id))
+
+
 @app.route('/get-nhom-list', methods=['POST'])
 @login_required
 def get_nhom_list():
@@ -1257,7 +1265,7 @@ def nhap_du_lieu_abc_ven():
             print(date_from2, date_to2)
             tong_hop_abc_ven_du_lieu_co_san(date_from=date_from2, date_to=date_to2, period=2)
         elif 'file' in request.files:
-            print('here');
+            print('here')
             file = request.files.get('file')
             tong_hop_abc_ven_file(file, 1)
         elif 'file1' in request.files:
@@ -1710,7 +1718,6 @@ def date_xddm():
                DotThau.ngayQD <= date_to).all()
 
     bao_cao_dict = []
-    hoatchatlist = []
     for r in results:
         ven = r.thuoc.ven
         t = SuDungThuocABCVEN.query.filter(SuDungThuocABCVEN.thuoc == r.thuoc.name,
@@ -1727,8 +1734,14 @@ def date_xddm():
              r.hoat_chat.nhom_duoc_ly_bv.name if r.hoat_chat.nhom_duoc_ly_bv else '',
              r.hoat_chat.nhom_hoa_duoc_bv.name if r.hoat_chat.nhom_duoc_ly_bv else '',
              abc, ven])
-        hoatchatlist.append(r.hoat_chat.name)
-    ketQuaXDDM = {'danhmuc': bao_cao_dict, 'hoatchatlist': sorted(set(hoatchatlist))}
+    hoatchats = HoatChat.query.filter_by(hospital_id=current_user.hospital.id).order_by(HoatChat.name).all()
+    hoatchatlist = [{'id': h.id, 'name': h.name} for h in hoatchats]
+    ndls = NhomDuocLyBV.query.filter_by(hospital_id=current_user.hospital.id).order_by(NhomDuocLyBV.name).all()
+    ndllist = [{'id': h.id, 'name': h.name} for h in ndls]
+    nhds = NhomHoaDuocBV.query.filter_by(hospital_id=current_user.hospital.id).order_by(NhomHoaDuocBV.name).all()
+    nhdlist = [{'id': h.id, 'name': h.name} for h in nhds]
+    ketQuaXDDM = {'danhmuc': bao_cao_dict, 'hoatchatlist': hoatchatlist, 'ndllist': ndllist,
+                  'nhdlist': nhdlist}
     return jsonify(ketQuaXDDM=ketQuaXDDM)
 
 
@@ -1752,10 +1765,14 @@ def xay_dung_danh_muc_data():
              r.hoat_chat.nhom_duoc_ly_bv.name if r.hoat_chat.nhom_duoc_ly_bv else '',
              r.hoat_chat.nhom_hoa_duoc_bv.name if r.hoat_chat.nhom_duoc_ly_bv else '',
              abc, ven])
-
     hoatchats = HoatChat.query.filter_by(hospital_id=current_user.hospital.id).order_by(HoatChat.name).all()
-    hoatchatlist = [h.name for h in hoatchats]
-    ketQuaXDDM = {'danhmuc': bao_cao_dict, 'hoatchatlist': hoatchatlist}
+    hoatchatlist = [{'id': h.id, 'name': h.name} for h in hoatchats]
+    ndls = NhomDuocLyBV.query.filter_by(hospital_id=current_user.hospital.id).order_by(NhomDuocLyBV.name).all()
+    ndllist = [{'id': h.id, 'name': h.name} for h in ndls]
+    nhds = NhomHoaDuocBV.query.filter_by(hospital_id=current_user.hospital.id).order_by(NhomHoaDuocBV.name).all()
+    nhdlist = [{'id': h.id, 'name': h.name} for h in nhds]
+    ketQuaXDDM = {'danhmuc': bao_cao_dict, 'hoatchatlist': hoatchatlist, 'ndllist': ndllist,
+                  'nhdlist': nhdlist}
     return jsonify(ketQuaXDDM=ketQuaXDDM)
 
 

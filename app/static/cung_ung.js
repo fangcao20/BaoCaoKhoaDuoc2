@@ -67,6 +67,42 @@ var chartNHD = new Chart(ctxNHD, {
     }
 })
 
+var ctxThuocSD = document.getElementById('canvas_thuoc_sd');
+var chartThuocSD = new Chart(ctxThuocSD, {
+    type: 'line',
+    data: {
+        labels: [],
+        datasets: []
+    },
+});
+
+var ctxThuocCL = document.getElementById('canvas_thuoc_cl');
+var chartThuocCL = new Chart(ctxThuocCL, {
+    type: 'line',
+    data: {
+        labels: [],
+        datasets: []
+    },
+});
+
+var ctxThuocTL = document.getElementById('canvas_thuoc_tl');
+var chartThuocTL = new Chart(ctxThuocTL, {
+    type: 'line',
+    data: {
+        labels: [],
+        datasets: []
+    },
+});
+
+var ctxThuocTLL = document.getElementById('canvas_thuoc_tll');
+var chartThuocTLL = new Chart(ctxThuocTLL, {
+    type: 'line',
+    data: {
+        labels: [],
+        datasets: []
+    },
+});
+
 function get_thuoc_list(input) {
     var value = input.value;
     if (value.length == 1) {
@@ -98,11 +134,6 @@ function get_thuoc_list(input) {
 
             var thongkekho = response.thongkekho;
             if(thongkekho) {
-                var labels = [];
-                var ngay_nhap_kho_chan = [];
-                var ton_kho_le = [];
-                var trung_binh_nhap_chan = [];
-                var du_tru_con_lai = [];
                 var html = '';
                 for (let row of thongkekho) {
                     html += `<tr style="display: table-row;">
@@ -112,31 +143,9 @@ function get_thuoc_list(input) {
                         <td>${row[5].toLocaleString()}</td>
                         <td>${row[6].toLocaleString()}</td>
                     </tr>`;
-                    labels.push(formatDate(row[1]));
-                    ngay_nhap_kho_chan.push(parseInt(row[3]));
-                    ton_kho_le.push(parseInt(row[4]));
-                    trung_binh_nhap_chan.push(parseInt(row[5]));
-                    du_tru_con_lai.push(parseInt(row[6]));
-
                 }
-                var label_data = ['Nhập kho chẵn', 'Tồn kho lẻ', 'Trung bình nhập chẵn', 'Dự trù còn lại'];
-                var borderColor_data = ['#ff6384', '#36a2eb', '#ffcd56', '#4bc0c0'];
-                var data_list = [ngay_nhap_kho_chan, ton_kho_le, trung_binh_nhap_chan, du_tru_con_lai];
-                chartThuoc.data.labels = labels;
-                chartThuoc.data.datasets = [];
-                for (let i = 0, n = label_data.length; i < n; i++) {
-                    chartThuoc.data.datasets.push(
-                        {
-                            label: label_data[i],
-                            data: data_list[i],
-                            borderColor: borderColor_data[i],
-                            backgroundColor: borderColor_data[i]
-                        }
-                    )
-                }
-                chartThuoc.update();
+                show_chart_thuoc(thongkekho, chartThuoc);
                 document.getElementById('tableThuoc').innerHTML = html;
-                console.log(chartThuoc.data);
             }
         }).fail(function() {
             alert('Lỗi: Không thể kết nối với máy chủ. Vui lòng thử lại sau.');
@@ -144,6 +153,7 @@ function get_thuoc_list(input) {
     }
 }
 
+var selected_hoat_chat_id;
 function theo_nhom_thau() {
     $.post('/get-nhom-list', {'nhom': 'nhom_thau'}
     ).done(function(response) {
@@ -151,6 +161,9 @@ function theo_nhom_thau() {
         if (hoat_chat_list) {
             var slHoatChat = document.getElementById('selectHoatChatCungUng');
             slHoatChat.innerHTML = setOptions(hoat_chat_list);
+            if (selected_hoat_chat_id) {
+                $('#selectHoatChatCungUng').val(selected_hoat_chat_id).trigger('change');
+            }
         }
     }).fail(function() {
         alert('Lỗi: Không thể kết nối với máy chủ. Vui lòng thử lại sau.');
@@ -160,6 +173,7 @@ function theo_nhom_thau() {
 $('#selectHoatChatCungUng').on('change', function () {
     var hoatChatId = this.value;
     var hoatChat = this.options[this.selectedIndex].innerText;
+    selected_hoat_chat_id = hoatChatId;
     $.post('/cung-ung-theo-nhom', {'hoat_chat': hoatChatId
     }).done(function(response) {
         ctxNT.parentElement.style.display = 'block';
@@ -178,6 +192,15 @@ function theo_nhom_duoc_ly() {
         if (nhom_duoc_ly_list) {
             var slNhomDuocLy = document.getElementById('selectNhomDuocLyCungUng');
             slNhomDuocLy.innerHTML = setOptions(nhom_duoc_ly_list);
+            if (selected_hoat_chat_id) {
+                $.post('/get-nhom-theo-hoat-chat', {'hoat_chat_id': selected_hoat_chat_id}
+                ).done(function(response) {
+                    console.log(response);
+                    $('#selectNhomDuocLyCungUng').val(response.nhom_duoc_ly).trigger('change');
+                }).fail(function() {
+                    alert('Lỗi: Không thể kết nối với máy chủ. Vui lòng thử lại sau.');
+                })
+            }
         }
     }).fail(function() {
         alert('Lỗi: Không thể kết nối với máy chủ. Vui lòng thử lại sau.');
@@ -206,6 +229,15 @@ function theo_nhom_hoa_duoc() {
         if (nhom_hoa_duoc_list) {
             var slNhomHoaDuoc = document.getElementById('selectNhomHoaDuocCungUng');
             slNhomHoaDuoc.innerHTML = setOptions(nhom_hoa_duoc_list);
+            if (selected_hoat_chat_id) {
+                $.post('/get-nhom-theo-hoat-chat', {'hoat_chat_id': selected_hoat_chat_id}
+                ).done(function(response) {
+                    console.log(response);
+                    $('#selectNhomHoaDuocCungUng').val(response.nhom_hoa_duoc).trigger('change');
+                }).fail(function() {
+                    alert('Lỗi: Không thể kết nối với máy chủ. Vui lòng thử lại sau.');
+                })
+            }
         }
     }).fail(function() {
         alert('Lỗi: Không thể kết nối với máy chủ. Vui lòng thử lại sau.');
@@ -241,6 +273,7 @@ function su_dung() {
         }
         document.getElementById('tableSuDung').innerHTML = htmlSuDung;
         sortTable(document.getElementById('tableSuDung').parentElement);
+        selectRowTable(document.getElementById('tableSuDung').rows, select_row_cung_ung);
     }).fail(function() {
         alert('Lỗi: Không thể kết nối với máy chủ. Vui lòng thử lại sau.');
     })
@@ -262,9 +295,11 @@ function con_lai() {
         }
         document.getElementById('tableConLai').innerHTML = htmlConLai;
         sortTable(document.getElementById('tableConLai').parentElement);
+        selectRowTable(document.getElementById('tableConLai').rows, select_row_cung_ung);
     }).fail(function() {
         alert('Lỗi: Không thể kết nối với máy chủ. Vui lòng thử lại sau.');
     })
+
 }
 $('#inputConLai').on('change', con_lai);
 
@@ -283,6 +318,7 @@ function ton_le() {
         }
         document.getElementById('tableTonLe').innerHTML = htmlTonLe;
         sortTable(document.getElementById('tableTonLe').parentElement);
+        selectRowTable(document.getElementById('tableTonLe').rows, select_row_cung_ung);
     }).fail(function() {
         alert('Lỗi: Không thể kết nối với máy chủ. Vui lòng thử lại sau.');
     })
@@ -304,6 +340,7 @@ function ton_le_lon() {
         }
         document.getElementById('tableTonLeLon').innerHTML = htmlTonLe;
         sortTable(document.getElementById('tableTonLeLon').parentElement);
+        selectRowTable(document.getElementById('tableTonLeLon').rows, select_row_cung_ung);
     }).fail(function() {
         alert('Lỗi: Không thể kết nối với máy chủ. Vui lòng thử lại sau.');
     })
@@ -765,6 +802,7 @@ function conLaivaSuDung(row, i) {
         <td class="specialCol">${(100*row[2]/row[1]).toFixed(2)}%</td>
         <td>${row[3].toLocaleString()}</td>
         <td class="specialCol">${(100*row[3]/row[1]).toFixed(2)}%</td>
+        <td style="display: none">${row[row.length - 1]}</td>
     </tr>`;
     return html;
 }
@@ -784,6 +822,7 @@ function setTonLe(row) {
                 <td>${row[4].toLocaleString()}</td>
                 <td>${row[5].toLocaleString()}</td>
                 <td class="specialCol">${(100*row[5]/row[4]).toFixed(2)}%</td>
+                <td style="display: none">${row[row.length - 1]}</td>
             </tr>`;
     return html;
 }
@@ -925,35 +964,6 @@ function fileKho(files, output) {
     });
 }
 
-function hienThiKetQuaCungUng(ketQuaCungUng) {
-    var suDung = parseInt(document.getElementById('inputSuDung').value)/100;
-    var conLai = parseInt(document.getElementById('inputConLai').value)/100;
-    var tonLeInput = parseInt(document.getElementById('inputTonLe').value)/100;
-    var tonLeLon = parseInt(document.getElementById('inputTonLeLon').value)/100;
-
-    $('#inputSuDung').on('change', function () {
-        hienThiKetQuaCungUng(ketQuaCungUng);
-    })
-    $('#inputConLai').on('change', function () {
-        hienThiKetQuaCungUng(ketQuaCungUng);
-    })
-    $('#inputTonLe').on('change', function () {
-        hienThiKetQuaCungUng(ketQuaCungUng);
-    })
-    $('#inputTonLeLon').on('change', function () {
-        hienThiKetQuaCungUng(ketQuaCungUng);
-    })
-    document.getElementById('tableConLai').innerHTML = htmlConLai;
-    document.getElementById('tableSuDung').innerHTML = htmlSuDung;
-    document.getElementById('tableTonLe').innerHTML = htmlTonLe;
-    document.getElementById('tableTonLeLon').innerHTML = htmlTonLeLon;
-
-    sortTable(document.getElementById('tableConLai').parentElement);
-    sortTable(document.getElementById('tableSuDung').parentElement);
-    sortTable(document.getElementById('tableTonLe').parentElement);
-    sortTable(document.getElementById('tableTonLeLon').parentElement);
-}
-
 function select(i) {
     var hamluong = $(`#ham_luong${i}`)[0].value;
     var duongdung = $(`#duong_dung${i}`)[0].value;
@@ -1021,8 +1031,7 @@ function set_hl_dd_dbc(i, index, value, danhsachthau) {
                 htmlDBC += `<option value="${r[17]}">${r[17]}</option>`;
             }
         }
-    }
-    console.log(htmlHL);
+    };
     $(`#ham_luong${i}`)[0].innerHTML = htmlHL;
     $(`#duong_dung${i}`)[0].innerHTML = htmlDD;
     $(`#dang_bao_che${i}`)[0].innerHTML = htmlDBC;
@@ -1036,4 +1045,62 @@ function destroy_chart() {
             chartStatus.destroy();
         }
     }
+}
+
+function select_row_cung_ung(row) {
+    var cells = row.querySelectorAll('td');
+    var code = cells[cells.length - 1].innerText;
+    $.post('/cung-ung-theo-thuoc', {'code': code
+        }).done(function(response) {
+            var thongkekho = response.thongkekho;
+            if(thongkekho) {
+                switch (row.parentElement.id) {
+                    case 'tableConLai':
+                        show_chart_thuoc(thongkekho, chartThuocCL);
+                        break;
+                    case 'tableSuDung':
+                        show_chart_thuoc(thongkekho, chartThuocSD);
+                        break;
+                    case 'tableTonLe':
+                        show_chart_thuoc(thongkekho, chartThuocTL);
+                        break;
+                    case 'tableTonLeLon':
+                        show_chart_thuoc(thongkekho, chartThuocTLL);
+                        break;
+                }
+            }
+        }).fail(function() {
+            alert('Lỗi: Không thể kết nối với máy chủ. Vui lòng thử lại sau.');
+        })
+}
+
+function show_chart_thuoc(thongkekho, chart) {
+    var labels = [];
+    var ngay_nhap_kho_chan = [];
+    var ton_kho_le = [];
+    var trung_binh_nhap_chan = [];
+    var du_tru_con_lai = [];
+    for (let row of thongkekho) {
+        labels.push(formatDate(row[1]));
+        ngay_nhap_kho_chan.push(parseInt(row[3]));
+        ton_kho_le.push(parseInt(row[4]));
+        trung_binh_nhap_chan.push(parseInt(row[5]));
+        du_tru_con_lai.push(parseInt(row[6]));
+    }
+    var label_data = ['Nhập kho chẵn', 'Tồn kho lẻ', 'Trung bình nhập chẵn', 'Dự trù còn lại'];
+    var borderColor_data = ['#ff6384', '#36a2eb', '#ffcd56', '#4bc0c0'];
+    var data_list = [ngay_nhap_kho_chan, ton_kho_le, trung_binh_nhap_chan, du_tru_con_lai];
+    chart.data.labels = labels;
+    chart.data.datasets = [];
+    for (let i = 0, n = label_data.length; i < n; i++) {
+        chart.data.datasets.push(
+            {
+                label: label_data[i],
+                data: data_list[i],
+                borderColor: borderColor_data[i],
+                backgroundColor: borderColor_data[i]
+            }
+        )
+    }
+    chart.update();
 }

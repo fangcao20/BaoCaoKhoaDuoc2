@@ -25,20 +25,19 @@ function select_date() {
         })
 }
 
-function setSelectXDDM(xayDungDanhMuc) {
-    var hoatchatlist = xayDungDanhMuc.hoatchatlist;
+function setSelectXDDM(list) {
     var html = '<option value="">Tất cả</option>';
-    for (const hc of hoatchatlist) {
+    for (const hc of list) {
         html += `
-            <option value="${hc}">${hc}</option>
+            <option value="${hc.id}">${hc.name}</option>
         `;
     }
-    document.getElementById('selectHoatChatXDDM').innerHTML = html;
+    return html;
 }
 
 const gridXayDungDanhMuc = {
   columnDefs: [
-        { headerName: 'STT', field: 'stt', filter: true, minWidth: 80, maxWidth: 80, pinned: 'left' },
+        { headerName: 'TT', field: 'stt', filter: true, minWidth: 50, maxWidth: 50, pinned: 'left' },
         { headerName: 'Tên thuốc', field: 'tenThuoc', filter: true, pinned: 'left'  },
         { headerName: 'Hoạt chất', field: 'hoatChat', filter: true, pinned: 'left'  },
         { headerName: 'Hàm lượng', field: 'hamLuong', filter: true },
@@ -96,23 +95,64 @@ var gridDivXayDungDanhMuc = document.querySelector('#gridXayDungDanhMuc');
 new agGrid.Grid(gridDivXayDungDanhMuc, gridXayDungDanhMuc);
 
 function updateXayDungDanhMuc(xayDungDanhMuc) {
-    setSelectXDDM(xayDungDanhMuc);
+    $('#selectHoatChatXDDM-0')[0].innerHTML = setSelectXDDM(xayDungDanhMuc.hoatchatlist);
+    $('#selectNhomDuocLyXDDM')[0].innerHTML = setSelectXDDM(xayDungDanhMuc.ndllist);
+    $('#selectNhomHoaDuocXDDM')[0].innerHTML = setSelectXDDM(xayDungDanhMuc.nhdlist);
     var danhmuc = xayDungDanhMuc.danhmuc;
-    updateData(danhmuc);
-    $('#selectHoatChatXDDM').on('change', function() {
-        updateData(danhmuc);
+    updateData(danhmuc, '#selectHoatChatXDDM-0', 3);
+    $('#selectHoatChatXDDM-0').on('change', function() {
+        $('#checkNHD')[0].checked = false;
+        $('#checkNDL')[0].checked = false;
+        $('#selectNhomHoaDuocXDDM').val('').trigger('change');
+        $('#selectNhomDuocLyXDDM').val('').trigger('change');
+        updateData(danhmuc, '#selectHoatChatXDDM-0', 3);
+        var selected_hoat_chat_id = document.getElementById('selectHoatChatXDDM-0').value;
+        var nhom_duoc_ly, nhom_hoa_duoc;
+        if (selected_hoat_chat_id) {
+            $.post('/get-nhom-theo-hoat-chat', {'hoat_chat_id': selected_hoat_chat_id}
+            ).done(function(response) {
+                nhom_duoc_ly = response.nhom_duoc_ly;
+                nhom_hoa_duoc = response.nhom_hoa_duoc;
+            }).fail(function() {
+                alert('Lỗi: Không thể kết nối với máy chủ. Vui lòng thử lại sau.');
+            })
+        }
+        $('#checkNHD').on('change', function() {
+            if (this.checked) {
+                $('#selectNhomHoaDuocXDDM').val(nhom_hoa_duoc).trigger('change');
+            } else {
+                updateData(danhmuc, '#selectHoatChatXDDM-0', 3);
+            }
+        })
+        $('#checkNDL').on('change', function() {
+            if (this.checked) {
+                $('#checkNHD')[0].checked = true;
+                $('#selectNhomDuocLyXDDM').val(nhom_duoc_ly).trigger('change');
+            } else {
+                if ($('#checkNHD')[0].checked) {
+                    $('#checkNHD').trigger('change');
+                }
+            }
+        })
+    })
+    $('#selectNhomDuocLyXDDM').on('change', function() {
+        updateData(danhmuc, '#selectNhomDuocLyXDDM', 17);
+    })
+    $('#selectNhomHoaDuocXDDM').on('change', function() {
+        updateData(danhmuc, '#selectNhomHoaDuocXDDM', 18);
     })
 }
 
-function updateData(danhmuc) {
+function updateData(danhmuc, id, index) {
     var cols = ['maDotThau', 'ngayQD', 'tenThuoc', 'hoatChat', 'hamLuong', 'sDK', 'duongDung', 'dangBaoChe', 'quyCachDongGoi', 'donViTinh', 'coSoSanXuat',
     'nuocSanXuat', 'nhaThau', 'nhomThau', 'soLuong', 'donGia', 'thanhTien', 'nhomDuocLy', 'nhomHoaDuoc', 'ABC', 'VEN']
-    var hoatChat = document.querySelector('#selectHoatChatXDDM').value;
+    var select = document.querySelector(id);
+    var select_value = select.options[select.selectedIndex].innerText;
     var rowData = [];
     var stt = 1;
     for (row of danhmuc) {
         var rowDict = {};
-        if (hoatChat === "") {
+        if (select_value === "Tất cả") {
             for (i = 0; i < row.length; i++) {
                 rowDict[cols[i]] = row[i];
             }
@@ -123,7 +163,7 @@ function updateData(danhmuc) {
             rowData.push(rowDict);
             stt++;
         } else {
-            if (row[3] === hoatChat) {
+            if (row[index] === select_value) {
                 for (i = 0; i < row.length; i++) {
                     rowDict[cols[i]] = row[i];
                 }

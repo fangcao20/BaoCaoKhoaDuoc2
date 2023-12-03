@@ -595,17 +595,19 @@ class TongHopThau(db.Model):
         return '<TongHopThau {}>'.format(self.time)
 
     def to_dict(self):
-        hoat_chat = self.thuoc.ketquatrungthaus[0].hoat_chat
-        ham_luong = self.thuoc.ketquatrungthaus[0].ham_luong.name
-        duong_dung = self.thuoc.ketquatrungthaus[0].duong_dung.name
-        dang_bao_che = self.thuoc.ketquatrungthaus[0].dang_bao_che.name
-        nhom_thau = self.thuoc.ketquatrungthaus[0].nhom_thau.name
+        code = self.thuoc.code
+        kqtt = self.thuoc.ketquatrungthaus[0]
+        hoat_chat = kqtt.hoat_chat
+        ham_luong = kqtt.ham_luong.name
+        duong_dung = kqtt.duong_dung.name
+        dang_bao_che = kqtt.dang_bao_che.name
+        nhom_thau = kqtt.nhom_thau.name
         nhom_duoc_ly_bv = hoat_chat.nhom_duoc_ly_bv.name if hoat_chat.nhom_duoc_ly_bv else 'Chưa chọn nhóm dược lý'
         nhom_hoa_duoc_bv = hoat_chat.nhom_hoa_duoc_bv.name if hoat_chat.nhom_hoa_duoc_bv else 'Chưa chọn nhóm hoá dược'
         return [self.time, self.tong_ke_hoach, self.tong_su_dung, self.con_lai, self.nhap_le_moi_nhat,
                 self.ton_le_moi_nhat, self.trung_binh_nhap_chan, self.so_lan_du_tru, self.thuoc_id, self.thuoc.name,
                 hoat_chat.name, nhom_duoc_ly_bv, nhom_hoa_duoc_bv, nhom_thau, self.ton_chan, ham_luong, duong_dung,
-                dang_bao_che]
+                dang_bao_che, code]
 
 
 class ThongKeKho(db.Model):

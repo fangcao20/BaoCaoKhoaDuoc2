@@ -126,4 +126,19 @@ th, td {
 .table-cung-ung {
     max-height: 550px;
     overflow: auto;
-  }
+}
+
+table {
+    font-size: 13px !important;
+}
+
+.ag-theme-alpine {
+     --ag-font-size: 11px !important;
+     --ag-grid-size: 3px !important;
+     --ag-list-item-height: 18px !important;
+}
+
+.xddm tr td {
+    padding-top: 3px;
+    padding-bottom: 3px;
+}
