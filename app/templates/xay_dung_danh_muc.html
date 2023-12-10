@@ -1,103 +1,106 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="row" style="margin-left: 10px;">
-    <div class="col-2"><h6>Chọn khoảng thời gian:</h6></div>
-    <div class="col-2">Từ <input type="date" id="date_from"></div>
-    <div class="col-2">Đến <input type="date" id="date_to"></div>
-    <div class="col-1">
-        <button class="btn btn-secondary btn-sm" style="width: 100px" onclick="select_date()">
-            <i class="fas fa-magnifying-glass"></i></button></div>
-</div>
-<div class="row mt-3">
-    <div class="col-6" id="xddm1">
-        <table class="table table-borderless xddm">
-            <tr>
-                <td style="width: 120px"><h6>Hoạt chất:</h6></td>
-                <td>
-                    <div style="width: 400px">
-                        <select style="width: 100%" class="form-select select2" name="selectHoatChatXDDM" id="selectHoatChatXDDM-0"></select>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td></td>
-                <td>
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="" id="checkNHD">
-                        <label class="form-check-label" for="checkNHD">Nhóm hoá dược</label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="" id="checkNDL">
-                        <label class="form-check-label" for="checkNDL">Nhóm dược lý</label>
-                    </div>
-                </td>
-            </tr>
-        </table>
+<div class="d-flex flex-row" style="margin-left: 20px;">
+    <div class="select-time">
+        <h6>Chọn khoảng thời gian:</h6>
     </div>
-    <div class="col-6" id="xddm2">
-        <table class="table table-borderless xddm">
-            <tr>
-                <td style="width: 150px"><h6>Nhóm dược lý:</h6></td>
-                <td>
-                    <div style="width: 400px">
-                        <select style="width: 100%" class="form-select select2" name="selectNhomDuocLyXDDM" id="selectNhomDuocLyXDDM"></select>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td style="width: 180px"><h6>Nhóm hoá dược:</h6></td>
-                <td>
-                    <div style="width: 400px">
-                        <select style="width: 100%" class="form-select select2" name="selectNhomHoaDuocXDDM" id="selectNhomHoaDuocXDDM"></select>
-                    </div>
-                </td>
-            </tr>
-        </table>
+    <div class="select-time d-flex flex-row">
+        <input type="date" id="date_from">
+        <h6 style="padding: 0 10px">-</h6>
+        <input type="date" id="date_to">
+    </div>
+    <div class="select-time">
+        <button class="btn btn-secondary btn-sm" style="width: 100px" onclick="select_date()">
+            <i class="fas fa-magnifying-glass"></i></button>
+    </div>
+</div>
+<div class="row mt-1 mb-2">
+    <div class="col-4 d-flex flex-row">
+        <h6 style="margin: 0 20px">Hoạt chất:</h6>
+        <div style="width: 300px">
+            <select style="width: 100%" class="form-select select2" name="selectHoatChatXDDM" id="selectHoatChatXDDM-0"></select>
+        </div>
+    </div>
+    <div class="col-4 d-flex flex-row">
+        <div class="form-check" style="margin-right: 20px">
+            <input class="form-check-input" type="checkbox" name="" id="checkNHD">
+            <label class="form-check-label" for="checkNHD">Nhóm hoá dược</label>
+        </div>
+        <div style="width: 300px">
+            <select style="width: 100%" class="form-select select2" name="selectNhomHoaDuocXDDM" id="selectNhomHoaDuocXDDM"></select>
+        </div>
+    </div>
+    <div class="col-4 d-flex flex-row">
+        <div class="form-check" style="margin-right: 20px">
+            <input class="form-check-input" type="checkbox" name="" id="checkNDL">
+            <label class="form-check-label" for="checkNDL">Nhóm dược lý</label>
+        </div>
+        <div style="width: 300px">
+            <select style="width: 100%" class="form-select select2" name="selectNhomDuocLyXDDM" id="selectNhomDuocLyXDDM"></select>
+        </div>
     </div>
 </div>
 <div style="margin-left: 20px; margin-right: 20px">
-    <div style="height: 500px;" class="ag-theme-alpine" id="gridXayDungDanhMuc"></div>
+    <div style="height: 400px;" class="ag-theme-alpine" id="gridXayDungDanhMuc"></div>
 </div>
 <div class="container">
-    <div class="row mt-5">
-        <div class="row">
+    <div class="row mt-2">
+        <div>
             <table class="table table-bordered table-sm">
                 <thead>
                 <tr>
-                    <th style="width: 150px"></th>
+                    <th style="width: 100px"></th>
                     <th class="text-center">Số lượng</th>
                     <th class="text-center">%</th>
-                    <th class="text-center">Tổng tiền</th>
+                    <th class="text-center">Thành tiền</th>
                     <th class="text-center">%</th>
-                    <th class="completed text-center">Số lượng</th>
+                    <th class="completed text-center" colspan="2">Số lượng</th>
                     <th class="completed text-center">%</th>
-                    <th class="completed text-center">Tổng tiền</th>
+                    <th class="completed text-center" colspan="2">Thành tiền</th>
                     <th class="completed text-center">%</th>
                 </tr>
                 </thead>
                 <tbody id="tableBDG"></tbody>
             </table>
         </div>
-        <div class="row mt-3">
+        <div class="row chart-xddm" style="visibility: hidden">
+            <div class="col-6">
+                <div style="width: 100%;"><canvas id="bg_soluong"></canvas></div>
+            </div>
+            <div class="col-6">
+                <div style="width: 100%;"><canvas id="bg_phantram"></canvas></div>
+            </div>
+        </div>
+</div>
+    <div class="row mt-2">
+        <div>
             <table class="table table-bordered table-sm">
                 <thead>
                 <tr>
-                    <th style="width: 150px"></th>
+                    <th style="width: 100px"></th>
                     <th class="text-center">Số lượng</th>
                     <th class="text-center">%</th>
-                    <th class="text-center">Tổng tiền</th>
+                    <th class="text-center">Thành tiền</th>
                     <th class="text-center">%</th>
-                    <th class="completed text-center">Số lượng</th>
+                    <th class="completed text-center" colspan="2">Số lượng</th>
                     <th class="completed text-center">%</th>
-                    <th class="completed text-center">Tổng tiền</th>
+                    <th class="completed text-center" colspan="2">Thành tiền</th>
                     <th class="completed text-center">%</th>
                 </tr>
                 </thead>
                 <tbody id="tableGeneric"></tbody>
             </table>
         </div>
-    </div>
+        <div class="row chart-xddm" style="visibility: hidden">
+            <div class="col-6">
+                <div style="width: 100%;"><canvas id="nt_soluong"></canvas></div>
+            </div>
+            <div class="col-6">
+                <div style="width: 100%;"><canvas id="nt_phantram"></canvas></div>
+            </div>
+        </div>
+</div>
 </div>
 <script src="/static/xay_dung_danh_muc.js"></script>
 {% endblock %}
