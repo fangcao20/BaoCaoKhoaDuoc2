@@ -27,7 +27,8 @@ $.get('/get-danh-muc'
     var danh_muc = response.danh_muc;
     if (danh_muc) {
         show_danh_muc(danh_muc.ham_luong_dict, '#ham_luong_c > div:nth-child(2) > table > tbody');
-        show_danh_muc(danh_muc.nhom_duoc_ly_dict, '#nhom_duoc_ly_c > div:nth-child(2) > table > tbody');
+        show_danh_muc(danh_muc.nhom_duoc_ly1_dict, '#nhom_duoc_ly_c > div:nth-child(2) > table > tbody');
+        show_danh_muc(danh_muc.nhom_duoc_ly2_dict, '#nhom_duoc_ly2_c > div:nth-child(2) > table > tbody');
         show_danh_muc(danh_muc.nhom_hoa_duoc_dict, '#nhom_hoa_duoc_c > div:nth-child(2) > table > tbody');
         show_danh_muc(danh_muc.duong_dung_dict, '#duong_dung_c > div:nth-child(2) > table > tbody');
         show_danh_muc(danh_muc.dang_bao_che_dict, '#dang_bao_che_c > div:nth-child(2) > table > tbody');
@@ -39,9 +40,10 @@ $.get('/get-danh-muc'
         show_thuoc(danh_muc.thuoc_dict);
         show_hoat_chat(danh_muc.hoat_chat_dict);
         show_nuoc_san_xuat(danh_muc.nuoc_san_xuat_dict);
-        $('#hoat_chat_tt20')[0].innerHTML = select_nhom(danh_muc.hoat_chat_tt20_dict);
+        $('#hoat_chat_bhyt')[0].innerHTML = select_nhom(danh_muc.hoat_chat_bhyt_dict);
         $('#hoat_chat_syt')[0].innerHTML = select_nhom(danh_muc.hoat_chat_syt_dict);
-        $('#select_nhom_duoc_ly')[0].innerHTML = select_nhom(danh_muc.nhom_duoc_ly_dict);
+        $('#select_nhom_duoc_ly1')[0].innerHTML = select_nhom(danh_muc.nhom_duoc_ly1_dict);
+        $('#select_nhom_duoc_ly2')[0].innerHTML = select_nhom(danh_muc.nhom_duoc_ly2_dict);
         $('#select_nhom_hoa_duoc')[0].innerHTML = select_nhom(danh_muc.nhom_hoa_duoc_dict);
     }
 }).fail(function() {
@@ -68,6 +70,7 @@ function show_thuoc(danh_muc_dict) {
 
 function select_nhom(danh_muc_dict) {
     var html = '<option value="">Chọn</option>';
+    console.log(danh_muc_dict);
     for (const r of danh_muc_dict) {
         html += `<option value="${r.id}">${r.name}</option>`;
     }
@@ -80,12 +83,14 @@ function show_hoat_chat(danh_muc_dict) {
     for (const r of danh_muc_dict) {
         html += `<tr>
             <th>${i}</td>
-            <th style="width: 120px">${r.code}</td>
+            <th style="width: 120px">${r.code}</th>
+            <th style="width: 120px">${r.atc_code}</th>
             <td>${r.name}</td>
-            <td>${r.hoat_chat_tt20}</td>
+            <td>${r.bhyt_name}</td>
             <td>${r.hoat_chat_syt}</td>
-            <td>${r.nhom_duoc_ly}</td>
-            <td>${r.nhom_hoa_duoc}</td>
+            <td>${r.nhom_duoc_ly1_bv}</td>
+            <td>${r.nhom_duoc_ly2_bv}</td>
+            <td>${r.nhom_hoa_duoc_bv}</td>
             <td style="display: none">${r.id}</td>
         </tr>`
         i++;
@@ -118,14 +123,17 @@ function select_row(table) {
         row.addEventListener('click', function() {
             var selectedTab = document.querySelector('[aria-selected="true"]');
             var danh_muc = selectedTab.id;
-            if (this.cells.length === 8) {
-                $('#search_hoat_chat')[0].value = row.cells[2].innerText;
-                changeSelectByText('hoat_chat_tt20', row.cells[3].innerText);
-                changeSelectByText('hoat_chat_syt', row.cells[4].innerText);
-                changeSelectByText('select_nhom_duoc_ly', row.cells[5].innerText);
-                changeSelectByText('select_nhom_hoa_duoc', row.cells[6].innerText);
+            if (this.cells.length === 10) {
+                $('#search_hoat_chat')[0].value = row.cells[3].innerText;
+                changeSelectByText('hoat_chat_bhyt', row.cells[4].innerText);
+                changeSelectByText('hoat_chat_syt', row.cells[5].innerText);
+                changeSelectByText('select_nhom_duoc_ly1', row.cells[6].innerText);
+                changeSelectByText('select_nhom_duoc_ly2', row.cells[7].innerText);
+                changeSelectByText('select_nhom_hoa_duoc', row.cells[8].innerText);
             } else if (danh_muc == 'nhom_duoc_ly') {
                 $('#searchNDL')[0].value = row.cells[1].innerText;
+            } else if (danh_muc == 'nhom_duoc_ly2') {
+                $('#searchNDL2')[0].value = row.cells[1].innerText;
             } else if (danh_muc == 'nhom_hoa_duoc') {
                 $('#searchNHD')[0].value = row.cells[1].innerText;
             }
@@ -138,12 +146,14 @@ function select_row(table) {
                 this.classList.remove('table-primary');
                 if (this.cells.length === 8) {
                     $('#search_hoat_chat')[0].value = '';
-                    $('#hoat_chat_tt20').val('').trigger('change');
+                    $('#hoat_chat_bhyt').val('').trigger('change');
                     $('#hoat_chat_syt').val('').trigger('change');
                     $('#select_nhom_duoc_ly').val('').trigger('change');
                     $('#select_nhom_hoa_duoc').val('').trigger('change');
                 } else if (danh_muc == 'nhom_duoc_ly') {
                     $('#searchNDL')[0].value = '';
+                } else if (danh_muc == 'nhom_duoc_ly2') {
+                    $('#searchNDL2')[0].value = '';
                 } else if (danh_muc == 'nhom_hoa_duoc') {
                     $('#searchNHD')[0].value = '';
                 }
@@ -151,7 +161,7 @@ function select_row(table) {
         });
 
         var cells = Array.from(row.querySelectorAll('td'));
-        if (cells.length === 6) {
+        if (cells.length === 7) {
             var hoat_chat = cells[0];
             var hoat_chat_id = cells[cells.length - 1];
             cells = [];
@@ -266,14 +276,15 @@ function changeSelectByText(selectId, desiredText) {
     }
 }
 
-function selectHoatChatTT20() {
-    var hoat_chat_tt20_id = $('#hoat_chat_tt20')[0].value;
-    if (hoat_chat_tt20_id != '') {
-        $.post('/get-nhom-dl-hd', {'id': hoat_chat_tt20_id
+function selectBHYT() {
+    var bhyt_id = $('#hoat_chat_bhyt')[0].value;
+    if (bhyt_id != '') {
+        $.post('/get-nhom-dl-hd', {'id': bhyt_id
             }).done(function (response) {
                 var nhom_dl_hd = response.nhom_dl_hd;
                 if (nhom_dl_hd) {
-                    changeSelectByText('select_nhom_duoc_ly', nhom_dl_hd.nhom_duoc_ly);
+                    changeSelectByText('select_nhom_duoc_ly1', nhom_dl_hd.nhom_duoc_ly1);
+                    changeSelectByText('select_nhom_duoc_ly2', nhom_dl_hd.nhom_duoc_ly2);
                     changeSelectByText('select_nhom_hoa_duoc', nhom_dl_hd.nhom_hoa_duoc);
                 }
             }).fail(function() {
@@ -283,11 +294,13 @@ function selectHoatChatTT20() {
 }
 
 function luu_hoat_chat() {
+    var r = selectedRows[selectedRows.length - 1];
     var data = {
-        'hoat_chat': $('#search_hoat_chat')[0].value,
-        'nhom_duoc_ly_bv_id': $('#select_nhom_duoc_ly')[0].value,
+        'hoat_chat_id': r.cells[r.cells.length - 1].innerText,
+        'nhom_duoc_ly1_bv_id': $('#select_nhom_duoc_ly1')[0].value,
+        'nhom_duoc_ly2_bv_id': $('#select_nhom_duoc_ly2')[0].value,
         'nhom_hoa_duoc_bv_id': $('#select_nhom_hoa_duoc')[0].value,
-        'hoat_chat_tt20_id': $('#hoat_chat_tt20')[0].value,
+        'hoat_chat_bhyt_id': $('#hoat_chat_bhyt')[0].value,
         'hoat_chat_syt_id': $('#hoat_chat_syt')[0].value,
     };
     $.post('/luu-hoat-chat', data

@@ -1,12 +1,13 @@
 from datetime import datetime
 
+import pandas as pd
 from sqlalchemy import func
 
 from app import db, app
-from app.models import HoatChatTT20, HoatChatSYT, BietDuocGocSYT, SoYTe, ThongTu20, NhomDuocLy, NhomHoaDuoc, \
-    NhomDuocLyBV, NhomHoaDuocBV, DotThau, Thuoc, HoatChat, DuongDung, DangBaoChe, HamLuong, QuyCachDongGoi, DonViTinh, \
-    CoSoSanXuat, NuocSanXuat, NhomThau, NhaThau, ImportHistory, KetQuaTrungThau, FileInformation, ImportHistoryNXT, NXT
-import pandas as pd
+from app.models import User, AccessControl, DotThau, ImportHistory, Thuoc, HoatChat, HamLuong, DuongDung, DangBaoChe, \
+    QuyCachDongGoi, DonViTinh, CoSoSanXuat, NuocSanXuat, NhaThau, NhomThau, KetQuaTrungThau, NhomDuocLy1, NhomHoaDuoc, \
+    FileInformation, KhoChan, KhoLe, ThongKeKho, TongHopThau, HoatChatSYT, NhomDuocLy1BV, \
+    NhomHoaDuocBV, ImportHistoryNXT, NXT, SuDungThuocABCVEN, SuDungTheoThang, NhomDuocLy2BV, ATC, NhomDuocLy2
 
 with app.app_context():
     # df = pd.read_excel("C:/Users/phuon/OneDrive/Desktop/Book1.xlsx")
@@ -68,132 +69,135 @@ with app.app_context():
     #     ngayQD = datetime.strptime(row[5], '%d/%m/%Y')
     #     ngayHH = datetime.strptime(row[6], '%d/%m/%Y')
     #     d = DotThau(code=row[0], name=row[1], phase=row[2], formality=row[3], soQD=row[4], ngayQD=ngayQD, ngayHH=ngayHH,
-    #                 hospital_id=1)
+    #                 hospital_id=7)
     #     db.session.add(d)
     # db.session.commit()
+    #
+    DM = ['thuoc', 'hoat_chat', 'ham_luong', 'duong_dung', 'dang_bao_che', 'quy_cach_dong_goi', 'don_vi_tinh',
+          'co_so_san_xuat', 'nuoc_san_xuat', 'nha_thau', 'nhom_thau', 'nhom_duoc_ly1', 'nhom_duoc_ly2', 'nhom_hoa_duoc']
+    IDS = ['thuoc_id', 'hoat_chat_id', 'ham_luong_id', 'duong_dung_id', 'dang_bao_che_id', 'quy_cach_dong_goi_id',
+           'don_vi_tinh_id', 'co_so_san_xuat_id', 'nuoc_san_xuat_id', 'nha_thau_id', 'nhom_thau_id', 'nhom_duoc_ly1_id',
+           'nhom_duoc_ly2_id', 'nhom_hoa_duoc_id']
+    MODELS = [Thuoc, HoatChat, HamLuong, DuongDung, DangBaoChe, QuyCachDongGoi, DonViTinh, CoSoSanXuat, NuocSanXuat,
+              NhaThau, NhomThau, NhomDuocLy1BV, NhomDuocLy2BV, NhomHoaDuocBV]
+    COLUMNS = ['Tên thuốc', 'Hoạt chất', 'Hàm lượng', 'Đường dùng', 'Dạng bào chế', 'Quy cách đóng gói', 'Đơn vị tính',
+               'Cơ sở sản xuất', 'Nước sản xuất', 'Nhà thầu', 'Nhóm thầu', 'Nhóm dược lý 1', 'Nhóm dược lý 2',
+               'Nhóm hoá dược']
 
-    # DM = ['thuoc', 'hoat_chat', 'ham_luong', 'duong_dung', 'dang_bao_che', 'quy_cach_dong_goi', 'don_vi_tinh',
-    #       'co_so_san_xuat', 'nuoc_san_xuat', 'nha_thau', 'nhom_thau', 'nhom_duoc_ly', 'nhom_hoa_duoc']
-    # IDS = ['thuoc_id', 'hoat_chat_id', 'ham_luong_id', 'duong_dung_id', 'dang_bao_che_id', 'quy_cach_dong_goi_id',
-    #        'don_vi_tinh_id', 'co_so_san_xuat_id', 'nuoc_san_xuat_id', 'nha_thau_id', 'nhom_thau_id']
-    # MODELS = [Thuoc, HoatChat, HamLuong, DuongDung, DangBaoChe, QuyCachDongGoi, DonViTinh, CoSoSanXuat, NuocSanXuat,
-    #           NhaThau, NhomThau, NhomDuocLyBV, NhomHoaDuocBV]
-    # COLUMNS = ['Tên thuốc', 'Hoạt chất', 'Hàm lượng', 'Đường dùng', 'Dạng bào chế', 'Quy cách đóng gói', 'Đơn vị tính',
-    #            'Cơ sở sản xuất', 'Nước sản xuất', 'Nhà thầu', 'Nhóm thầu', 'Nhóm dược lý', 'Nhóm hoá dược']
-    #
-    # hospital_id = 1
-    # df = pd.read_excel("C:/Users/phuon/OneDrive/Desktop/Thẻ kho/KQTT.xlsx")
-    # for k in range(0, 882):
-    #     try:
-    #         thau = df.loc[k, 'Thầu'].strip()
-    #     except Exception as e:
-    #         print(e)
-    #         print(k)
-    #     dot_thau_id = DotThau.query.filter_by(code=thau).first().id
-    #     ih = ImportHistory.query.filter_by(dot_thau_id=dot_thau_id).first()
-    #     if ih:
-    #         import_history_id = ih.id
-    #     else:
-    #         ih = ImportHistory(dot_thau_id=dot_thau_id, hospital_id=hospital_id)
-    #         db.session.add(ih)
-    #         db.session.flush()
-    #         import_history_id = ih.id
-    #     kq = KetQuaTrungThau(hospital_id=hospital_id, dot_thau_id=dot_thau_id, import_history_id=import_history_id)
-    #     for i in range(len(MODELS) - 3):
-    #         if COLUMNS[i] == "Tên thuốc":
-    #             thuoc = df.loc[k, "Mã thuốc BV"].strip() if str(df.loc[k, "Mã thuốc BV"]) != 'nan' else ''
-    #             if thuoc != '':
-    #                 thuoc_db = Thuoc.query.filter(Thuoc.codeBV == thuoc, Thuoc.hospital_id == hospital_id).first()
-    #             else:
-    #                 thuoc_db = None
-    #             if not thuoc_db:
-    #                 try:
-    #                     t = Thuoc(name=df.loc[k, "Tên thuốc"].strip(), cch=f';{df.loc[k, "Tên thuốc"].strip()};',
-    #                               sdk=df.loc[k, "SĐK"].strip() if str(df.loc[k, "SĐK"]) != 'nan' else '',
-    #                               codeBV=df.loc[k, 'Mã thuốc BV'],
-    #                               ven=df.loc[k, 'VEN'],
-    #                               hospital_id=hospital_id)
-    #                 except Exception as e:
-    #                     print(e)
-    #                     print(k)
-    #
-    #                 db.session.add(t)
-    #                 db.session.flush()
-    #                 t.code = f'TH{t.id:05}'
-    #                 thuoc_id = t.id
-    #             else:
-    #                 thuoc_id = thuoc_db.id
-    #             kq.thuoc_id = thuoc_id
-    #         elif COLUMNS[i] == "Hoạt chất":
-    #             hoatchat = df.loc[k, "Hoạt chất"].strip()
-    #             hoatchat_db = HoatChat.query.filter(HoatChat.cch.ilike(f';{hoatchat};'),
-    #                                                 HoatChat.hospital_id == hospital_id).first()
-    #             if not hoatchat_db:
-    #                 h = HoatChat(name=hoatchat, cch=f';{hoatchat};', hospital_id=hospital_id)
-    #                 hcsyt = HoatChatSYT.query.filter(func.lower(HoatChatSYT.name) == hoatchat.lower()).first()
-    #                 if hcsyt:
-    #                     h.hoat_chat_syt_id = hcsyt.id
-    #                 hctt20 = HoatChatTT20.query.filter(func.lower(HoatChatTT20.name) == hoatchat.lower()).first()
-    #                 if hctt20:
-    #                     h.hoat_chat_tt20_id = hctt20.id
-    #                     h.nhom_duoc_ly_bv_id = NhomDuocLyBV.query.filter_by(
-    #                         name=hctt20.tt20[0].nhom_duoc_ly.name).first().id
-    #                     h.nhom_hoa_duoc_bv_id = NhomHoaDuocBV.query.filter_by(
-    #                         name=hctt20.tt20[0].nhom_hoa_duoc.name).first().id
-    #                 db.session.add(h)
-    #                 db.session.flush()
-    #                 h.code = f'HC{h.id:05}'
-    #                 hoat_chat_id = h.id
-    #             else:
-    #                 hoat_chat_id = hoatchat_db.id
-    #             kq.hoat_chat_id = hoat_chat_id
-    #         elif COLUMNS[i] == "Nước sản xuất":
-    #             nuocsanxuat = df.loc[k, 'Nước sản xuất'].strip()
-    #             nuocsanxuat_db = NuocSanXuat.query.filter(NuocSanXuat.cch.ilike(f';{nuocsanxuat};'),
-    #                                                       NuocSanXuat.hospital_id == hospital_id).first()
-    #             if not nuocsanxuat_db:
-    #                 n = NuocSanXuat(name=nuocsanxuat, cch=f';{nuocsanxuat};', hospital_id=hospital_id)
-    #                 if nuocsanxuat.lower() in ['việt nam', 'vn']:
-    #                     n.place = 'Nội'
-    #                 else:
-    #                     n.place = 'Ngoại'
-    #                 db.session.add(n)
-    #                 db.session.flush()
-    #                 nuoc_san_xuat_id = n.id
-    #             else:
-    #                 nuoc_san_xuat_id = nuocsanxuat_db.id
-    #             kq.nuoc_san_xuat_id = nuoc_san_xuat_id
-    #         else:
-    #             id_name = IDS[i]
-    #             obj = str(df.loc[k, COLUMNS[i]]).strip() if str(df.loc[k, COLUMNS[i]]) != 'nan' else ''
-    #             if obj != '':
-    #                 obj_db = MODELS[i].query.filter(MODELS[i].cch.ilike(f';{obj};'),
-    #                                                 MODELS[i].hospital_id == hospital_id).first()
-    #             else:
-    #                 obj_db = None
-    #             if not obj_db:
-    #                 ob = MODELS[i](name=obj, cch=f';{obj};', hospital_id=hospital_id)
-    #                 db.session.add(ob)
-    #                 db.session.flush()
-    #                 setattr(kq, id_name, ob.id)
-    #             else:
-    #                 setattr(kq, id_name, obj_db.id)
-    #
-    #     if str(df.loc[k, 'Nhóm thầu']) == 'nan':
-    #         nhom_thau_id = 7
-    #     else:
-    #         nhom_thau_id = NhomThau.query.filter(
-    #             func.lower(NhomThau.name).ilike(func.lower(df.loc[k, 'Nhóm thầu'].strip()))).first().id
-    #     so_luong = int(df.loc[k, 'Số lượng']) if str(df.loc[k, 'Số lượng']) != 'nan' else 0
-    #     don_gia = float(df.loc[k, 'Đơn giá']) if str(df.loc[k, 'Đơn giá']) != 'nan' else 0
-    #     thanh_tien = int(df.loc[k, 'Thành tiền']) if str(df.loc[k, 'Thành tiền']) != 'nan' else 0
-    #
-    #     kq.nhom_thau_id = nhom_thau_id
-    #     kq.so_luong = so_luong
-    #     kq.thanh_tien = thanh_tien
-    #     kq.don_gia = don_gia
-    #     db.session.add(kq)
-    # db.session.commit()
+    hospital_id = 7
+    df = pd.read_excel("C:/Users/phuon/OneDrive/Desktop/Thẻ kho/KQTT.xlsx")
+    for k in range(0, 882):
+        try:
+            thau = df.loc[k, 'Thầu'].strip()
+        except Exception as e:
+            print(e)
+            print(k)
+        dot_thau_id = DotThau.query.filter_by(code=thau).first().id
+        ih = ImportHistory.query.filter_by(dot_thau_id=dot_thau_id).first()
+        if ih:
+            import_history_id = ih.id
+        else:
+            ih = ImportHistory(dot_thau_id=dot_thau_id, hospital_id=hospital_id, time=func.now())
+            db.session.add(ih)
+            db.session.flush()
+            import_history_id = ih.id
+        kq = KetQuaTrungThau(hospital_id=hospital_id, dot_thau_id=dot_thau_id, import_history_id=import_history_id)
+        for i in range(len(MODELS) - 4):
+            if COLUMNS[i] == "Tên thuốc":
+                thuoc = df.loc[k, "Mã thuốc BV"].strip() if str(df.loc[k, "Mã thuốc BV"]) != 'nan' else ''
+                if thuoc != '':
+                    thuoc_db = Thuoc.query.filter(Thuoc.codeBV == thuoc, Thuoc.hospital_id == hospital_id).first()
+                else:
+                    thuoc_db = None
+                if not thuoc_db:
+                    try:
+                        t = Thuoc(name=df.loc[k, "Tên thuốc"].strip(), show="1",
+                                  sdk=df.loc[k, "SĐK"].strip() if str(df.loc[k, "SĐK"]) != 'nan' else '',
+                                  codeBV=df.loc[k, 'Mã thuốc BV'],
+                                  ven=df.loc[k, 'VEN'],
+                                  hospital_id=hospital_id)
+                    except Exception as e:
+                        print(e)
+                        print(k)
+                    db.session.add(t)
+                    db.session.flush()
+                    t.code = f'TH{t.id:05}'
+                    thuoc_id = t.id
+                else:
+                    thuoc_id = thuoc_db.id
+                kq.thuoc_id = thuoc_id
+            elif COLUMNS[i] == "Hoạt chất":
+                hoatchat = df.loc[k, "Hoạt chất"].strip()
+                hoatchat_db = HoatChat.query.filter(func.lower(HoatChat.name) == hoatchat.lower(),
+                                                    HoatChat.hospital_id == hospital_id).first()
+                if not hoatchat_db:
+                    h = HoatChat(name=hoatchat, show="1", hospital_id=hospital_id)
+                    hcsyt = HoatChatSYT.query.filter(func.lower(HoatChatSYT.name) == hoatchat.lower()).first()
+                    if hcsyt:
+                        h.hoat_chat_syt_id = hcsyt.id
+                    atc = ATC.query.filter(func.lower(ATC.name) == hoatchat.lower()).first()
+                    if atc:
+                        h.atc_id = atc.id
+                        h.nhom_duoc_ly1_bv_id = NhomDuocLy1BV.query.\
+                            filter_by(hospital_id=hospital_id, nhom_duoc_ly1_id=atc.nhom_duoc_ly1_id).first().id
+                        h.nhom_duoc_ly2_bv_id = NhomDuocLy2BV.query.\
+                            filter_by(hospital_id=hospital_id, nhom_duoc_ly2_id=atc.nhom_duoc_ly2_id).first().id
+                        h.nhom_hoa_duoc_bv_id = NhomHoaDuocBV.query.\
+                            filter_by(hospital_id=hospital_id, nhom_hoa_duoc_id=atc.nhom_hoa_duoc_id).first().id
+                    db.session.add(h)
+                    db.session.flush()
+                    h.code = f'HC{h.id:05}'
+                    hoat_chat_id = h.id
+                else:
+                    hoat_chat_id = hoatchat_db.id
+                kq.hoat_chat_id = hoat_chat_id
+            elif COLUMNS[i] == "Nước sản xuất":
+                nuocsanxuat = df.loc[k, 'Nước sản xuất'].strip()
+                nuocsanxuat_db = NuocSanXuat.query.filter(func.lower(NuocSanXuat.name) == nuocsanxuat.lower(),
+                                                          NuocSanXuat.hospital_id == hospital_id).first()
+                if not nuocsanxuat_db:
+                    n = NuocSanXuat(name=nuocsanxuat, show="1", hospital_id=hospital_id)
+                    if nuocsanxuat.lower().strip() in ['việt nam', 'vn']:
+                        n.place = 'Nội'
+                    else:
+                        n.place = 'Ngoại'
+                    db.session.add(n)
+                    db.session.flush()
+                    nuoc_san_xuat_id = n.id
+                else:
+                    nuoc_san_xuat_id = nuocsanxuat_db.id
+                kq.nuoc_san_xuat_id = nuoc_san_xuat_id
+            else:
+                id_name = IDS[i]
+                obj = str(df.loc[k, COLUMNS[i]]).strip() if str(df.loc[k, COLUMNS[i]]) != 'nan' else ''
+                if obj != '':
+                    obj_db = MODELS[i].query.filter(func.lower(MODELS[i].name) == obj.lower(),
+                                                    MODELS[i].hospital_id == hospital_id).first()
+                else:
+                    obj_db = None
+                if not obj_db:
+                    ob = MODELS[i](name=obj, show="1", hospital_id=hospital_id)
+                    db.session.add(ob)
+                    db.session.flush()
+                    setattr(kq, id_name, ob.id)
+                else:
+                    setattr(kq, id_name, obj_db.id)
+
+        if str(df.loc[k, 'Nhóm thầu']) == 'nan':
+            nhom_thau_id = 7
+        else:
+            nhom_thau_id = NhomThau.query.filter(
+                func.lower(NhomThau.name).ilike(func.lower(df.loc[k, 'Nhóm thầu'].strip()))).first().id
+        so_luong = int(df.loc[k, 'Số lượng']) if str(df.loc[k, 'Số lượng']) != 'nan' else 0
+        don_gia = float(df.loc[k, 'Đơn giá']) if str(df.loc[k, 'Đơn giá']) != 'nan' else 0
+        thanh_tien = int(df.loc[k, 'Thành tiền']) if str(df.loc[k, 'Thành tiền']) != 'nan' else 0
+
+        kq.nhom_thau_id = nhom_thau_id
+        kq.so_luong = so_luong
+        kq.thanh_tien = thanh_tien
+        kq.don_gia = don_gia
+        db.session.add(kq)
+    db.session.commit()
 
     #
     # results = Thuoc.query.all()
@@ -248,4 +252,14 @@ with app.app_context():
     #     if h.hoat_chat_tt20_id is not None:
     #         tt20 = ThongTu20.query.filter_by(hoat_chat_tt20_id=h.hoat_chat_tt20_id).first()
     #         h.nhom_hoa_duoc_bv_id = tt20.nhom_hoa_duoc_id
-    db.session.commit()
+    # db.session.commit()
+
+    # df = pd.read_excel("C:/Users/phuon/Downloads/Danh mục ATC & phân nhóm v1.1.xlsx")
+    # for i in range(df.shape[0]):
+    #     row = df.iloc[i].tolist()
+    #     atc_code = row[0]
+    #     atc = ATC.query.filter_by(atc_code=atc_code).first()
+    #     atc.name = row[7]
+    # db.session.commit()
+
+

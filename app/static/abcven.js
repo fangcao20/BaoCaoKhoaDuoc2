@@ -1,3 +1,4 @@
+show_tabs_2_periods('N');
 $.get('/nhap-du-lieu-abc-ven'
 ).done(function(response){
     var ketQuaABCVEN = response.ketQuaABCVEN;
@@ -8,7 +9,32 @@ $.get('/nhap-du-lieu-abc-ven'
     console.log('Lỗi: Không thể kết nối với máy chủ.');
 })
 
+function show_tabs_2_periods(check) {
+    for (let i = 1; i < 9; i++) {
+        var div = document.querySelector(`#tab-${i}`);
+        if (div) {
+            if (check == "Y") {
+                if (i != 5) {
+                    div.setAttribute("disabled", true);
+                } else {
+                    div.setAttribute("disabled", false);
+                }
+            } else {
+                if (i != 5) {
+                    div.setAttribute("disabled", false);
+                } else {
+                    div.setAttribute("disabled", true);
+                }
+            }
+            if (i == 6) {
+                div.style.display = 'none';
+            }
+        }
+    }
+}
+
 function available_1_time(btn) {
+    show_tabs_2_periods('N');
     var div = document.createElement('div');
     div.innerHTML = `<img src="/static/loading.gif" alt="">Đang tải dữ liệu, vui lòng chờ trong giây lát.`;
     btn.parentElement.appendChild(div);
@@ -29,6 +55,7 @@ function available_1_time(btn) {
 }
 
 function available_2_time(btn) {
+    show_tabs_2_periods('Y');
     var div = document.createElement('div');
     div.innerHTML = `<img src="/static/loading.gif" alt="">Đang tải dữ liệu, vui lòng chờ trong giây lát.`;
     btn.parentElement.appendChild(div);
@@ -57,6 +84,7 @@ function available_2_time(btn) {
 }
 
 function import_1_time(btn) {
+    show_tabs_2_periods('N');
     console.log('here');
     var div = document.createElement('div');
     div.innerHTML = `<img src="/static/loading.gif" alt="">Đang tải dữ liệu, vui lòng chờ trong giây lát.`;
@@ -87,6 +115,7 @@ function import_1_time(btn) {
 }
 
 function import_2_time(btn) {
+    show_tabs_2_periods('Y');
     var div = document.createElement('div');
     div.innerHTML = `<img src="/static/loading.gif" alt="">Đang tải dữ liệu, vui lòng chờ trong giây lát.`;
     btn.parentElement.appendChild(div);

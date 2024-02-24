@@ -21,7 +21,8 @@ var chartNT = new Chart(ctxNT, {
             stacked: true,
           },
           y: {
-            stacked: true
+            stacked: true,
+            max: 100
           }
         }
     }
@@ -41,7 +42,29 @@ var chartNDL = new Chart(ctxNDL, {
             stacked: true,
           },
           y: {
-            stacked: true
+            stacked: true,
+            max: 100
+          }
+        }
+    }
+})
+
+var ctxNDL2 = document.getElementById('canvas_nhomduocly2');
+var chartNDL2 = new Chart(ctxNDL2, {
+    type: 'bar',
+    data: {
+        labels: [],
+        datasets: []
+    },
+    options: {
+        responsive: true,
+        scales: {
+          x: {
+            stacked: true,
+          },
+          y: {
+            stacked: true,
+            max: 100
           }
         }
     }
@@ -61,7 +84,8 @@ var chartNHD = new Chart(ctxNHD, {
             stacked: true,
           },
           y: {
-            stacked: true
+            stacked: true,
+            max: 100
           }
         }
     }
@@ -112,7 +136,7 @@ function get_thuoc_list(input) {
             if (thuoc_list) {
                 var html = '';
                 for (const r of thuoc_list) {
-                    html += `<option>${r.code} - ${r.name}</option>`;
+                    html += `<option>${r.codeBV} - ${r.name}</option>`;
                 }
                 $('#datalist_thuoc')[0].innerHTML = html;
             }
@@ -178,7 +202,7 @@ $('#selectHoatChatCungUng').on('change', function () {
     }).done(function(response) {
         ctxNT.parentElement.style.display = 'block';
         document.getElementById('tableNhomThau').innerHTML = cungUngTheoNhom(response.danhsachthau, chartNT);
-        set_hl_dd_dbc(1, 10, hoatChat, response.danhsachthau);
+        set_hl_dd_dbc(1);
         sortTable(document.getElementById('tableNhomThau').parentElement, chartNT);
     }).fail(function() {
         alert('Lỗi: Không thể kết nối với máy chủ. Vui lòng thử lại sau.');
@@ -186,7 +210,7 @@ $('#selectHoatChatCungUng').on('change', function () {
 })
 
 function theo_nhom_duoc_ly() {
-    $.post('/get-nhom-list', {'nhom': 'nhom_duoc_ly'}
+    $.post('/get-nhom-list', {'nhom': 'nhom_duoc_ly1'}
     ).done(function(response) {
         var nhom_duoc_ly_list = response.nhom_duoc_ly_list;
         if (nhom_duoc_ly_list) {
@@ -196,7 +220,7 @@ function theo_nhom_duoc_ly() {
                 $.post('/get-nhom-theo-hoat-chat', {'hoat_chat_id': selected_hoat_chat_id}
                 ).done(function(response) {
                     console.log(response);
-                    $('#selectNhomDuocLyCungUng').val(response.nhom_duoc_ly).trigger('change');
+                    $('#selectNhomDuocLyCungUng').val(response.nhom_duoc_ly1).trigger('change');
                 }).fail(function() {
                     alert('Lỗi: Không thể kết nối với máy chủ. Vui lòng thử lại sau.');
                 })
@@ -210,12 +234,47 @@ function theo_nhom_duoc_ly() {
 $('#selectNhomDuocLyCungUng').on('change', function () {
         var nhomDuocLyId = this.value;
         var nhomDuocLy = this.options[this.selectedIndex].innerText;
-        $.post('/cung-ung-theo-nhom', {'nhom_duoc_ly': nhomDuocLyId
+        $.post('/cung-ung-theo-nhom', {'nhom_duoc_ly1': nhomDuocLyId
         }).done(function(response) {
             ctxNDL.parentElement.style.display = 'block';
             document.getElementById('tableDuocLy').innerHTML = cungUngTheoNhom(response.danhsachthau, chartNDL);
             sortTable(document.getElementById('tableDuocLy').parentElement, chartNDL);
-            set_hl_dd_dbc(2, 11, nhomDuocLy, response.danhsachthau);
+            set_hl_dd_dbc(2);
+        }).fail(function() {
+            alert('Lỗi: Không thể kết nối với máy chủ. Vui lòng thử lại sau.');
+        })
+    })
+
+function theo_nhom_duoc_ly2() {
+    $.post('/get-nhom-list', {'nhom': 'nhom_duoc_ly2'}
+    ).done(function(response) {
+        var nhom_duoc_ly_list = response.nhom_duoc_ly_list;
+        if (nhom_duoc_ly_list) {
+            var slNhomDuocLy = document.getElementById('selectNhomDuocLyCungUng2');
+            slNhomDuocLy.innerHTML = setOptions(nhom_duoc_ly_list);
+            if (selected_hoat_chat_id) {
+                $.post('/get-nhom-theo-hoat-chat', {'hoat_chat_id': selected_hoat_chat_id}
+                ).done(function(response) {
+                    $('#selectNhomDuocLyCungUng2').val(response.nhom_duoc_ly2).trigger('change');
+                }).fail(function() {
+                    alert('Lỗi: Không thể kết nối với máy chủ. Vui lòng thử lại sau.');
+                })
+            }
+        }
+    }).fail(function() {
+        alert('Lỗi: Không thể kết nối với máy chủ. Vui lòng thử lại sau.');
+    })
+}
+
+$('#selectNhomDuocLyCungUng2').on('change', function () {
+        var nhomDuocLyId = this.value;
+        var nhomDuocLy = this.options[this.selectedIndex].innerText;
+        $.post('/cung-ung-theo-nhom', {'nhom_duoc_ly2': nhomDuocLyId
+        }).done(function(response) {
+            ctxNDL2.parentElement.style.display = 'block';
+            document.getElementById('tableDuocLy2').innerHTML = cungUngTheoNhom(response.danhsachthau, chartNDL2);
+            sortTable(document.getElementById('tableDuocLy2').parentElement, chartNDL2);
+            set_hl_dd_dbc(4);
         }).fail(function() {
             alert('Lỗi: Không thể kết nối với máy chủ. Vui lòng thử lại sau.');
         })
@@ -232,7 +291,6 @@ function theo_nhom_hoa_duoc() {
             if (selected_hoat_chat_id) {
                 $.post('/get-nhom-theo-hoat-chat', {'hoat_chat_id': selected_hoat_chat_id}
                 ).done(function(response) {
-                    console.log(response);
                     $('#selectNhomHoaDuocCungUng').val(response.nhom_hoa_duoc).trigger('change');
                 }).fail(function() {
                     alert('Lỗi: Không thể kết nối với máy chủ. Vui lòng thử lại sau.');
@@ -252,7 +310,7 @@ $('#selectNhomHoaDuocCungUng').on('change', function () {
             ctxNHD.parentElement.style.display = 'block';
             document.getElementById('tableHoaDuoc').innerHTML = cungUngTheoNhom(response.danhsachthau, chartNHD);
             sortTable(document.getElementById('tableHoaDuoc').parentElement, chartNHD);
-            set_hl_dd_dbc(3, 12, nhomHoaDuoc, response.danhsachthau);
+            set_hl_dd_dbc(3);
         }).fail(function() {
             alert('Lỗi: Không thể kết nối với máy chủ. Vui lòng thử lại sau.');
         })
@@ -433,7 +491,7 @@ function show_table_history(import_history_dict) {
                 <td>${a}</td>
                 <td>${i.name}</td>
                 <td>${formatDate(i.month)}</td>
-                <td>${formatDate(i.time)}</td>
+                <td>${i.time}</td>
                 <td><button type="button" class="btn btn-link btn-sm btn-rounded text-danger" onclick="xoaDuLieuImport(${i.id})">Xoá</button></td>
                 <td style="display: none">${i.id}</td>
             </tr>
@@ -737,6 +795,7 @@ function setOptions(danhsachthau) {
 }
 
 function cungUngTheoNhom(danhsachthau, chart) {
+    console.log(danhsachthau);
     var html = '';
     var labels = [];
     var su_dung = [];
@@ -802,7 +861,7 @@ function conLaivaSuDung(row, i) {
         <td class="specialCol">${(100*row[2]/row[1]).toFixed(2)}%</td>
         <td>${row[3].toLocaleString()}</td>
         <td class="specialCol">${(100*row[3]/row[1]).toFixed(2)}%</td>
-        <td style="display: none">${row[row.length - 1]}</td>
+        <td style="display: none">${row[18]}</td>
     </tr>`;
     return html;
 }
@@ -822,7 +881,7 @@ function setTonLe(row) {
                 <td>${row[4].toLocaleString()}</td>
                 <td>${row[5].toLocaleString()}</td>
                 <td class="specialCol">${(100*row[5]/row[4]).toFixed(2)}%</td>
-                <td style="display: none">${row[row.length - 1]}</td>
+                <td style="display: none">${row[18]}</td>
             </tr>`;
     return html;
 }
@@ -975,6 +1034,9 @@ function select(i) {
     } else if (i == 2) {
         rows = document.getElementById('tableDuocLy').rows;
         chart = Chart.getChart('canvas_nhomduocly');
+    } else if (i == 4) {
+        rows = document.getElementById('tableDuocLy2').rows;
+        chart = Chart.getChart('canvas_nhomduocly2');
     } else {
         rows = document.getElementById('tableHoaDuoc').rows;
         chart = Chart.getChart('canvas_nhomhoaduoc');
@@ -1013,23 +1075,25 @@ function select(i) {
     chart.update();
 }
 
-function set_hl_dd_dbc(i, index, value, danhsachthau) {
+function set_hl_dd_dbc(i) {
     var htmlHL = '<option value=""></option>', htmlDD = '<option value=""></option>', htmlDBC = '<option value=""></option>';
     var HLlist = [], DDlist = [], DBClist = [];
-    for (const r of danhsachthau) {
-        if (value === r[index]) {
-            if (!HLlist.includes(r[15])) {
-                HLlist.push(r[15]);
-                htmlHL += `<option value="${r[15]}">${r[15]}</option>`;
-            }
-            if (!DDlist.includes(r[16])) {
-                DDlist.push(r[16]);
-                htmlDD += `<option value="${r[16]}">${r[16]}</option>`;
-            }
-            if (!DBClist.includes(r[17])) {
-                DBClist.push(r[17]);
-                htmlDBC += `<option value="${r[17]}">${r[17]}</option>`;
-            }
+    var table = $(`#ham_luong${i}`)[0].parentElement.parentElement.parentElement.querySelector('table tbody');
+    var rows = table.rows;
+    for (let r of rows) {
+        var c = r.cells;
+        var hl = c[5].innerText, dd = c[6].innerText, dbc = c[7].innerText;
+        if (!HLlist.includes(hl)) {
+            HLlist.push(hl);
+            htmlHL += `<option value="${hl}">${hl}</option>`;
+        }
+        if (!DDlist.includes(dd)) {
+            DDlist.push(dd);
+            htmlDD += `<option value="${dd}">${dd}</option>`;
+        }
+        if (!DBClist.includes(dbc)) {
+            DBClist.push(dbc);
+            htmlDBC += `<option value="${dbc}">${dbc}</option>`;
         }
     };
     $(`#ham_luong${i}`)[0].innerHTML = htmlHL;
@@ -1050,6 +1114,7 @@ function destroy_chart() {
 function select_row_cung_ung(row) {
     var cells = row.querySelectorAll('td');
     var code = cells[cells.length - 1].innerText;
+    console.log(code);
     $.post('/cung-ung-theo-thuoc', {'code': code
         }).done(function(response) {
             var thongkekho = response.thongkekho;

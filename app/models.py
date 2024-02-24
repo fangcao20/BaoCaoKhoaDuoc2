@@ -121,7 +121,8 @@ class Hospital(db.Model):
     import_history_nxts = db.relationship('ImportHistoryNXT', cascade="all,delete", backref='hospital', lazy='dynamic')
     nxts = db.relationship('NXT', cascade="all,delete", backref='hospital', lazy='dynamic')
     abcvens = db.relationship('SuDungThuocABCVEN', cascade="all,delete", backref='hospital', lazy='dynamic')
-    nhomduoclys = db.relationship('NhomDuocLyBV', cascade="all,delete", backref='hospital', lazy='dynamic')
+    nhomduocly1s = db.relationship('NhomDuocLy1BV', cascade="all,delete", backref='hospital', lazy='dynamic')
+    nhomduocly2s = db.relationship('NhomDuocLy2BV', cascade="all,delete", backref='hospital', lazy='dynamic')
     nhomhoaduocs = db.relationship('NhomHoaDuocBV', cascade="all,delete", backref='hospital', lazy='dynamic')
     sudungtheothang = db.relationship('SuDungTheoThang', cascade="all,delete", backref='hospital', lazy='dynamic')
 
@@ -133,14 +134,19 @@ class Hospital(db.Model):
         self.url = url
         db.session.add(self)
         db.session.commit()
-        nhom_duoc_ly = NhomDuocLy.query.all()
-        for n in nhom_duoc_ly:
-            nn = NhomDuocLyBV(name=n.name, hospital_id=self.id)
+        nhom_duoc_ly1 = NhomDuocLy1.query.all()
+        for n in nhom_duoc_ly1:
+            nn = NhomDuocLy1BV(name=n.name, hospital_id=self.id, nhom_duoc_ly1_id=n.id)
+            db.session.add(nn)
+
+        nhom_duoc_ly2 = NhomDuocLy2.query.all()
+        for n in nhom_duoc_ly2:
+            nn = NhomDuocLy2BV(name=n.name, hospital_id=self.id, nhom_duoc_ly2_id=n.id)
             db.session.add(nn)
 
         nhom_hoa_duoc = NhomHoaDuoc.query.all()
         for n in nhom_hoa_duoc:
-            nn = NhomHoaDuocBV(name=n.name, hospital_id=self.id)
+            nn = NhomHoaDuocBV(name=n.name, hospital_id=self.id, nhom_hoa_duoc_id=n.id)
             db.session.add(nn)
         db.session.commit()
 
@@ -185,7 +191,7 @@ class ImportHistory(db.Model):
         return '<ImportHistory {}>'.format(self.dot_thau.code)
 
     def import_history_to_dict(self):
-        return {'code': self.dot_thau.code, 'time': self.time, 'id': self.id}
+        return {'code': self.dot_thau.code, 'time': self.time.strftime('%Y-%m-%d %H:%M:%S'), 'id': self.id}
 
 
 class Thuoc(db.Model):
@@ -193,7 +199,8 @@ class Thuoc(db.Model):
     code = db.Column(db.String(10), index=True)
     codeBV = db.Column(db.String(10), index=True)
     name = db.Column(db.String(500), index=True)
-    cch = db.Column(db.String(1000))  # Chưa chuẩn hoá
+    show = db.Column(db.String(1), index=True)
+    general_id = db.Column(db.Integer, index=True)
     sdk = db.Column(db.String(500), index=True)
     ven = db.Column(db.String(1), index=True)
     hospital_id = db.Column(db.Integer, db.ForeignKey('hospital.id', ondelete='CASCADE', onupdate='CASCADE'),
@@ -217,12 +224,15 @@ class Thuoc(db.Model):
 class HoatChat(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     code = db.Column(db.String(10), index=True)
+    codeBV = db.Column(db.String(10), index=True)
     name = db.Column(db.String(500), index=True)
-    cch = db.Column(db.String(1000))  # Chưa chuẩn hoá
-    nhom_duoc_ly_bv_id = db.Column(db.Integer, db.ForeignKey('nhom_duoc_ly_bv.id'))
+    show = db.Column(db.String(1), index=True)
+    general_id = db.Column(db.Integer, index=True)
+    nhom_duoc_ly1_bv_id = db.Column(db.Integer, db.ForeignKey('nhom_duoc_ly1_bv.id'))
+    nhom_duoc_ly2_bv_id = db.Column(db.Integer, db.ForeignKey('nhom_duoc_ly2_bv.id'))
     nhom_hoa_duoc_bv_id = db.Column(db.Integer, db.ForeignKey('nhom_hoa_duoc_bv.id'))
     hoat_chat_syt_id = db.Column(db.Integer, db.ForeignKey('hoat_chat_syt.id'))
-    hoat_chat_tt20_id = db.Column(db.Integer, db.ForeignKey('hoat_chat_tt20.id'))
+    atc_id = db.Column(db.Integer, db.ForeignKey('atc.id'))
     hospital_id = db.Column(db.Integer, db.ForeignKey('hospital.id', ondelete='CASCADE', onupdate='CASCADE'),
                             nullable=False)
 
@@ -232,11 +242,17 @@ class HoatChat(db.Model):
         return '<HoatChat {}>'.format(self.name)
 
     def danh_muc_to_dict(self):
-        return {'id': self.id, 'code': self.code, 'name': self.name,
-                'nhom_duoc_ly': self.nhom_duoc_ly_bv.name if self.nhom_duoc_ly_bv else '',
-                'nhom_hoa_duoc': self.nhom_hoa_duoc_bv.name if self.nhom_hoa_duoc_bv else '',
-                'hoat_chat_syt': self.hoat_chat_syt.name if self.hoat_chat_syt else '',
-                'hoat_chat_tt20': self.hoat_chat_tt20.name if self.hoat_chat_tt20 else ''}
+        ndl1 = self.nhom_duoc_ly1_bv
+        ndl2 = self.nhom_duoc_ly2_bv
+        nhd = self.nhom_hoa_duoc_bv
+        atc = self.atc
+        syt = self.hoat_chat_syt
+        return {'id': self.id, 'code': self.code, 'name': self.name, 'bhyt_name': atc.name if atc else '',
+                'atc_code': atc.atc_code if atc else '',
+                'hoat_chat_syt': syt.name if syt else '',
+                'nhom_duoc_ly1_bv': ndl1.name if ndl1 else '',
+                'nhom_duoc_ly2_bv': ndl2.name if ndl2 else '',
+                'nhom_hoa_duoc_bv': nhd.name if nhd else ''}
 
 
 class HoatChatSYT(db.Model):
@@ -279,38 +295,11 @@ class SoYTe(db.Model):
         return '<SoYTe {}>'.format(self.hoat_chat.name)
 
 
-class HoatChatTT20(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(500), index=True)
-    tt20 = db.relationship('ThongTu20', backref='hoat_chat', lazy='dynamic')
-    hoat_chat_bv = db.relationship('HoatChat', backref='hoat_chat_tt20', lazy='dynamic')
-
-    def __repr__(self):
-        return '<HoatChatTT20 {}>'.format(self.name)
-
-    def danh_muc_to_dict(self):
-        return {'id': self.id, 'name': self.name}
-
-
-class ThongTu20(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    stt = db.Column(db.Integer, index=True)
-    hoat_chat_tt20_id = db.Column(db.Integer, db.ForeignKey('hoat_chat_tt20.id'))
-    nhom_duoc_ly_id = db.Column(db.Integer, db.ForeignKey('nhom_duoc_ly.id'))
-    nhom_hoa_duoc_id = db.Column(db.Integer, db.ForeignKey('nhom_hoa_duoc.id'))
-    duong_dung = db.Column(db.String(64), index=True)
-
-    def __repr__(self):
-        return '<ThongTu20 {}>'.format(self.hoat_chat.name)
-
-    def to_dict(self):
-        return {'nhom_duoc_ly': self.nhom_duoc_ly.name, 'nhom_hoa_duoc': self.nhom_hoa_duoc.name}
-
-
 class HamLuong(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(500), index=True)
-    cch = db.Column(db.String(1000))  # Chưa chuẩn hoá
+    show = db.Column(db.String(1), index=True)
+    general_id = db.Column(db.Integer, index=True)
     hospital_id = db.Column(db.Integer, db.ForeignKey('hospital.id', ondelete='CASCADE', onupdate='CASCADE'),
                             nullable=False)
 
@@ -326,7 +315,8 @@ class HamLuong(db.Model):
 class DuongDung(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(500), index=True)
-    cch = db.Column(db.String(1000))  # Chưa chuẩn hoá
+    show = db.Column(db.String(1), index=True)
+    general_id = db.Column(db.Integer, index=True)
     hospital_id = db.Column(db.Integer, db.ForeignKey('hospital.id', ondelete='CASCADE', onupdate='CASCADE'),
                             nullable=False)
 
@@ -342,7 +332,8 @@ class DuongDung(db.Model):
 class DangBaoChe(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(500), index=True)
-    cch = db.Column(db.String(1000))  # Chưa chuẩn hoá
+    show = db.Column(db.String(1), index=True)
+    general_id = db.Column(db.Integer, index=True)
     hospital_id = db.Column(db.Integer, db.ForeignKey('hospital.id', ondelete='CASCADE', onupdate='CASCADE'),
                             nullable=False)
 
@@ -358,7 +349,8 @@ class DangBaoChe(db.Model):
 class QuyCachDongGoi(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(500), index=True)
-    cch = db.Column(db.String(1000))  # Chưa chuẩn hoá
+    show = db.Column(db.String(1), index=True)
+    general_id = db.Column(db.Integer, index=True)
     hospital_id = db.Column(db.Integer, db.ForeignKey('hospital.id', ondelete='CASCADE', onupdate='CASCADE'),
                             nullable=False)
 
@@ -375,7 +367,8 @@ class QuyCachDongGoi(db.Model):
 class DonViTinh(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(500), index=True)
-    cch = db.Column(db.String(1000))  # Chưa chuẩn hoá
+    show = db.Column(db.String(1), index=True)
+    general_id = db.Column(db.Integer, index=True)
     hospital_id = db.Column(db.Integer, db.ForeignKey('hospital.id', ondelete='CASCADE', onupdate='CASCADE'),
                             nullable=False)
 
@@ -391,7 +384,8 @@ class DonViTinh(db.Model):
 class CoSoSanXuat(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(500), index=True)
-    cch = db.Column(db.String(1000))  # Chưa chuẩn hoá
+    show = db.Column(db.String(1), index=True)
+    general_id = db.Column(db.Integer, index=True)
     hospital_id = db.Column(db.Integer, db.ForeignKey('hospital.id', ondelete='CASCADE', onupdate='CASCADE'),
                             nullable=False)
 
@@ -408,7 +402,8 @@ class CoSoSanXuat(db.Model):
 class NuocSanXuat(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(500), index=True)
-    cch = db.Column(db.String(1000))  # Chưa chuẩn hoá
+    show = db.Column(db.String(1), index=True)
+    general_id = db.Column(db.Integer, index=True)
     place = db.Column(db.String(10), index=True)  # Nội or Ngoại
     hospital_id = db.Column(db.Integer, db.ForeignKey('hospital.id', ondelete='CASCADE', onupdate='CASCADE'),
                             nullable=False)
@@ -425,7 +420,8 @@ class NuocSanXuat(db.Model):
 class NhaThau(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(500), index=True)
-    cch = db.Column(db.String(1000))  # Chưa chuẩn hoá
+    show = db.Column(db.String(1), index=True)
+    general_id = db.Column(db.Integer, index=True)
     hospital_id = db.Column(db.Integer, db.ForeignKey('hospital.id', ondelete='CASCADE', onupdate='CASCADE'),
                             nullable=False)
 
@@ -451,10 +447,30 @@ class NhomThau(db.Model):
         return {'id': self.id, 'name': self.name}
 
 
-class NhomDuocLyBV(db.Model):
+class NhomDuocLy1BV(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(500), index=True)
-    hoatchats = db.relationship('HoatChat', backref='nhom_duoc_ly_bv', lazy='dynamic')
+    show = db.Column(db.String(1), index=True)
+    general_id = db.Column(db.Integer, index=True)
+    hoatchats = db.relationship('HoatChat', backref='nhom_duoc_ly1_bv', lazy='dynamic')
+    nhom_duoc_ly1_id = db.Column(db.Integer, db.ForeignKey('nhom_duoc_ly1.id'))
+    hospital_id = db.Column(db.Integer, db.ForeignKey('hospital.id', ondelete='CASCADE', onupdate='CASCADE'),
+                            nullable=False)
+
+    def __repr__(self):
+        return '<NhomDuocLyBV {}>'.format(self.name)
+
+    def danh_muc_to_dict(self):
+        return {'id': self.id, 'name': self.name}
+
+
+class NhomDuocLy2BV(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(500), index=True)
+    show = db.Column(db.String(1), index=True)
+    general_id = db.Column(db.Integer, index=True)
+    hoatchats = db.relationship('HoatChat', backref='nhom_duoc_ly2_bv', lazy='dynamic')
+    nhom_duoc_ly2_id = db.Column(db.Integer, db.ForeignKey('nhom_duoc_ly2.id'))
     hospital_id = db.Column(db.Integer, db.ForeignKey('hospital.id', ondelete='CASCADE', onupdate='CASCADE'),
                             nullable=False)
 
@@ -468,7 +484,10 @@ class NhomDuocLyBV(db.Model):
 class NhomHoaDuocBV(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(500), index=True)
+    show = db.Column(db.String(1), index=True)
+    general_id = db.Column(db.Integer, index=True)
     hoatchats = db.relationship('HoatChat', backref='nhom_hoa_duoc_bv', lazy='dynamic')
+    nhom_hoa_duoc_id = db.Column(db.Integer, db.ForeignKey('nhom_hoa_duoc.id'))
     hospital_id = db.Column(db.Integer, db.ForeignKey('hospital.id', ondelete='CASCADE', onupdate='CASCADE'),
                             nullable=False)
 
@@ -479,10 +498,25 @@ class NhomHoaDuocBV(db.Model):
         return {'id': self.id, 'name': self.name}
 
 
-class NhomDuocLy(db.Model):
+class NhomDuocLy1(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(500), index=True)
-    tt20 = db.relationship('ThongTu20', backref='nhom_duoc_ly', lazy='dynamic')
+
+    nhom_duoc_ly1_bvs = db.relationship('NhomDuocLy1BV', backref='nhom_duoc_ly1', lazy='dynamic')
+    atcs = db.relationship('ATC', backref='nhom_duoc_ly1', lazy='dynamic')
+
+    def __repr__(self):
+        return '<NhomDuocLy {}>'.format(self.name)
+
+    def danh_muc_to_dict(self):
+        return {'id': self.id, 'name': self.name}
+
+
+class NhomDuocLy2(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(500), index=True)
+    nhom_duoc_ly2_bvs = db.relationship('NhomDuocLy2BV', backref='nhom_duoc_ly2', lazy='dynamic')
+    atcs = db.relationship('ATC', backref='nhom_duoc_ly2', lazy='dynamic')
 
     def __repr__(self):
         return '<NhomDuocLy {}>'.format(self.name)
@@ -494,7 +528,8 @@ class NhomDuocLy(db.Model):
 class NhomHoaDuoc(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(500), index=True)
-    tt20 = db.relationship('ThongTu20', backref='nhom_hoa_duoc', lazy='dynamic')
+    nhom_hoa_duoc_bvs = db.relationship('NhomHoaDuocBV', backref='nhom_hoa_duoc', lazy='dynamic')
+    atcs = db.relationship('ATC', backref='nhom_hoa_duoc', lazy='dynamic')
 
     def __repr__(self):
         return '<NhomHoaDuoc {}>'.format(self.name)
@@ -502,6 +537,28 @@ class NhomHoaDuoc(db.Model):
     def danh_muc_to_dict(self):
         return {'id': self.id, 'name': self.name}
 
+
+class ATC(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    atc_code = db.Column(db.String(10), index=True)
+    atc_name = db.Column(db.String(255), index=True)
+    nhom_duoc_ly1_id = db.Column(db.Integer, db.ForeignKey('nhom_duoc_ly1.id'))
+    nhom_duoc_ly2_id = db.Column(db.Integer, db.ForeignKey('nhom_duoc_ly2.id'))
+    nhom_hoa_duoc_id = db.Column(db.Integer, db.ForeignKey('nhom_hoa_duoc.id'))
+    name = db.Column(db.String(500), index=True) #BHYT name
+    hoatchats = db.relationship('HoatChat', backref='atc', lazy='dynamic')
+
+    def __repr__(self):
+        return '<ATC {}>'.format(self.atc_name)
+
+    def danh_muc_to_dict(self):
+        return {'id': self.id, 'name': self.name}
+
+    def nhom_dl_hd(self):
+        ndl1 = self.nhom_duoc_ly1
+        ndl2 = self.nhom_duoc_ly2
+        nhd = self.nhom_hoa_duoc
+        return {'nhom_duoc_ly1': ndl1.name, 'nhom_duoc_ly2': ndl2.name, 'nhom_hoa_duoc': nhd.name}
 
 class KetQuaTrungThau(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -595,19 +652,20 @@ class TongHopThau(db.Model):
         return '<TongHopThau {}>'.format(self.time)
 
     def to_dict(self):
-        code = self.thuoc.code
+        code = self.thuoc.codeBV
         kqtt = self.thuoc.ketquatrungthaus[0]
         hoat_chat = kqtt.hoat_chat
         ham_luong = kqtt.ham_luong.name
         duong_dung = kqtt.duong_dung.name
         dang_bao_che = kqtt.dang_bao_che.name
         nhom_thau = kqtt.nhom_thau.name
-        nhom_duoc_ly_bv = hoat_chat.nhom_duoc_ly_bv.name if hoat_chat.nhom_duoc_ly_bv else 'Chưa chọn nhóm dược lý'
+        nhom_duoc_ly1_bv = hoat_chat.nhom_duoc_ly1_bv.name if hoat_chat.nhom_duoc_ly1_bv else 'Chưa chọn nhóm dược lý'
+        nhom_duoc_ly2_bv = hoat_chat.nhom_duoc_ly2_bv.name if hoat_chat.nhom_duoc_ly2_bv else 'Chưa chọn nhóm dược lý'
         nhom_hoa_duoc_bv = hoat_chat.nhom_hoa_duoc_bv.name if hoat_chat.nhom_hoa_duoc_bv else 'Chưa chọn nhóm hoá dược'
         return [self.time, self.tong_ke_hoach, self.tong_su_dung, self.con_lai, self.nhap_le_moi_nhat,
                 self.ton_le_moi_nhat, self.trung_binh_nhap_chan, self.so_lan_du_tru, self.thuoc_id, self.thuoc.name,
-                hoat_chat.name, nhom_duoc_ly_bv, nhom_hoa_duoc_bv, nhom_thau, self.ton_chan, ham_luong, duong_dung,
-                dang_bao_che, code]
+                hoat_chat.name, nhom_duoc_ly1_bv, nhom_hoa_duoc_bv, nhom_thau, self.ton_chan, ham_luong, duong_dung,
+                dang_bao_che, code, nhom_duoc_ly2_bv]
 
 
 class ThongKeKho(db.Model):
@@ -642,7 +700,7 @@ class ImportHistoryNXT(db.Model):
         return '<ImportHistoryNXT {}>'.format(self.name)
 
     def import_history_to_dict(self):
-        return {'name': self.name, 'time': self.time, 'id': self.id, 'month': self.month}
+        return {'name': self.name, 'time': self.time.strftime('%Y-%m-%d %H:%M:%S'), 'id': self.id, 'month': self.month}
 
 
 class NXT(db.Model):

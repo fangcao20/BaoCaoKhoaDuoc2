@@ -279,9 +279,9 @@ function show_table_history(import_history_dict) {
     for (const i of import_history_dict) {
         html += `
             <tr>
-                <td>${a}</td>
+                <td style="width: 20px">${a}</td>
                 <td>${i.code}</td>
-                <td>${formatDate(i.time)}</td>
+                <td>${i.time}</td>
                 <td><button type="button" class="btn btn-link btn-sm btn-rounded text-danger" onclick="xoaDuLieuImport(${i.id})">Xoá</button></td>
                 <td style="display: none">${i.id}</td>
             </tr>
@@ -306,7 +306,8 @@ const gridOptions = {
         }
      }},
     { field: 'Hoạt chất', filter: true, minWidth: 250 },
-    { field: 'Nhóm Dược lý', filter: true, minWidth: 300 },
+    { field: 'Nhóm Dược lý 1', filter: true, minWidth: 300 },
+    { field: 'Nhóm Dược lý 2', filter: true, minWidth: 300 },
     { field: 'Nhóm Hóa dược', filter: true, minWidth: 300 },
     { field: 'Hàm lượng', filter: true, minWidth: 150 },
     { field: 'SĐK', filter: true, minWidth: 150 },

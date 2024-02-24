@@ -16,27 +16,36 @@
     </div>
 </div>
 <div class="row mt-1 mb-2">
-    <div class="col-4 d-flex flex-row">
+    <div class="col-3 d-flex flex-row">
         <h6 style="margin: 0 20px">Hoạt chất:</h6>
-        <div style="width: 300px">
-            <select style="width: 100%" class="form-select select2" name="selectHoatChatXDDM" id="selectHoatChatXDDM-0"></select>
+        <div style="width: 200px">
+            <select style="width: 100%" class="form-select select2" name="selectHoatChatXDDM" id="selectHoatChatXDDM"></select>
         </div>
     </div>
-    <div class="col-4 d-flex flex-row">
+    <div class="col-3 d-flex flex-row">
         <div class="form-check" style="margin-right: 20px">
             <input class="form-check-input" type="checkbox" name="" id="checkNHD">
             <label class="form-check-label" for="checkNHD">Nhóm hoá dược</label>
         </div>
-        <div style="width: 300px">
+        <div style="width: 200px">
             <select style="width: 100%" class="form-select select2" name="selectNhomHoaDuocXDDM" id="selectNhomHoaDuocXDDM"></select>
         </div>
     </div>
-    <div class="col-4 d-flex flex-row">
+    <div class="col-3 d-flex flex-row">
+        <div class="form-check" style="margin-right: 20px">
+            <input class="form-check-input" type="checkbox" name="" id="checkNDL2">
+            <label class="form-check-label" for="checkNDL">Nhóm dược lý 2</label>
+        </div>
+        <div style="width: 200px">
+            <select style="width: 100%" class="form-select select2" name="selectNhomDuocLyXDDM2" id="selectNhomDuocLyXDDM2"></select>
+        </div>
+    </div>
+    <div class="col-3 d-flex flex-row">
         <div class="form-check" style="margin-right: 20px">
             <input class="form-check-input" type="checkbox" name="" id="checkNDL">
-            <label class="form-check-label" for="checkNDL">Nhóm dược lý</label>
+            <label class="form-check-label" for="checkNDL">Nhóm dược lý 1</label>
         </div>
-        <div style="width: 300px">
+        <div style="width: 200px">
             <select style="width: 100%" class="form-select select2" name="selectNhomDuocLyXDDM" id="selectNhomDuocLyXDDM"></select>
         </div>
     </div>
@@ -65,10 +74,10 @@
             </table>
         </div>
         <div class="row chart-xddm" style="visibility: hidden">
-            <div class="col-6">
+            <div class="col-5">
                 <div style="width: 100%;"><canvas id="bg_soluong"></canvas></div>
             </div>
-            <div class="col-6">
+            <div class="col-5">
                 <div style="width: 100%;"><canvas id="bg_phantram"></canvas></div>
             </div>
         </div>
@@ -93,10 +102,10 @@
             </table>
         </div>
         <div class="row chart-xddm" style="visibility: hidden">
-            <div class="col-6">
+            <div class="col-5">
                 <div style="width: 100%;"><canvas id="nt_soluong"></canvas></div>
             </div>
-            <div class="col-6">
+            <div class="col-5">
                 <div style="width: 100%;"><canvas id="nt_phantram"></canvas></div>
             </div>
         </div>
